@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vektor.AppHost", "Vektor.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vektor.ServiceDefaults", "Vektor.ServiceDefaults\Vektor.ServiceDefaults.csproj", "{DD14C145-64CF-48ED-9BA6-4878A912F71B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vektor.MigrationService", "Vektor.MigrationService\Vektor.MigrationService.csproj", "{6D317452-306F-49F0-9E3F-62C7F2E0076A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{DD14C145-64CF-48ED-9BA6-4878A912F71B}.Release|x64.Build.0 = Release|Any CPU
 		{DD14C145-64CF-48ED-9BA6-4878A912F71B}.Release|x86.ActiveCfg = Release|Any CPU
 		{DD14C145-64CF-48ED-9BA6-4878A912F71B}.Release|x86.Build.0 = Release|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Debug|x64.Build.0 = Debug|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Debug|x86.Build.0 = Debug|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Release|x64.ActiveCfg = Release|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Release|x64.Build.0 = Release|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Release|x86.ActiveCfg = Release|Any CPU
+		{6D317452-306F-49F0-9E3F-62C7F2E0076A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
