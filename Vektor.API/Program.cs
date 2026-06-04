@@ -1,4 +1,8 @@
+using Vektor.API.Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddNpgsqlDbContext<VektorDbContext>("vektor");
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
