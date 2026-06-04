@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Vektor.API\Vektor.API.csproj" />
+    <ProjectReference Include="..\Vektor.MigrationService\Vektor.MigrationService.csproj" />
   </ItemGroup>
 
 </Project>
