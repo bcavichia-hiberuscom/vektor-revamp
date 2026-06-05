@@ -1,7 +1,7 @@
+using Hiberus.Industria.Vektor.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Vektor.API.Infrastructure.Persistence;
 
-namespace Vektor.MigrationService;
+namespace Hiberus.Industria.Vektor.MigrationService;
 
 public class Worker : BackgroundService
 {

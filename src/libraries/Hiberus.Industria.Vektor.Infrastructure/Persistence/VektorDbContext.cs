@@ -1,7 +1,7 @@
+using Hiberus.Industria.Vektor.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Vektor.API.Domain.Entities;
 
-namespace Vektor.API.Infrastructure.Persistence;
+namespace Hiberus.Industria.Vektor.Infrastructure.Persistence;
 
 public class VektorDbContext : DbContext
 {

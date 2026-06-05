@@ -1,7 +1,7 @@
-using Vektor.API.Application.DTOs;
-using Vektor.API.Domain.Entities;
+using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Domain.Entities;
 
-namespace Vektor.API.Application.Interfaces;
+namespace Hiberus.Industria.Vektor.Application.Interfaces;
 
 public interface IVehicleRepository
 {

@@ -1,10 +1,10 @@
+using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Application.Interfaces;
+using Hiberus.Industria.Vektor.Domain.Entities;
+using Hiberus.Industria.Vektor.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Vektor.API.Application.DTOs;
-using Vektor.API.Application.Interfaces;
-using Vektor.API.Domain.Entities;
-using Vektor.API.Infrastructure.Persistence;
 
-namespace Vektor.API.Infrastructure.Repositories;
+namespace Hiberus.Industria.Vektor.Infrastructure.Repositories;
 
 public class VehicleRepository : IVehicleRepository
 {

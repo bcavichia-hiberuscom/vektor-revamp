@@ -1,7 +1,6 @@
-// Vektor.API/Domain/Entities/Vehicle.cs
-namespace Vektor.API.Domain.Entities;
+namespace Hiberus.Industria.Vektor.Domain.Entities;
 
-using Vektor.API.Domain.Enums;
+using Hiberus.Industria.Vektor.Domain.Enums;
 
 public class Vehicle
 {

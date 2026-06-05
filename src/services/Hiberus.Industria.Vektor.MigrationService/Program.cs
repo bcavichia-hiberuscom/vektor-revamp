@@ -1,5 +1,5 @@
-using Vektor.API.Infrastructure.Persistence;
-using Vektor.MigrationService;
+using Hiberus.Industria.Vektor.Infrastructure.Persistence;
+using Hiberus.Industria.Vektor.MigrationService;
 
 var builder = Host.CreateApplicationBuilder(args);
 

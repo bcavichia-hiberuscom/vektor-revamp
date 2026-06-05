@@ -7,7 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\libraries\Hiberus.Industria.Vektor.Application\Hiberus.Industria.Vektor.Application.csproj" />
+    <ProjectReference Include="..\..\libraries\Hiberus.Industria.Vektor.Infrastructure\Hiberus.Industria.Vektor.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

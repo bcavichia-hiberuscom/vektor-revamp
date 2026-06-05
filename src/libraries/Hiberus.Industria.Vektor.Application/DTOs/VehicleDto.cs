@@ -1,7 +1,7 @@
-using Vektor.API.Domain.Entities;
-using Vektor.API.Domain.Enums;
+using Hiberus.Industria.Vektor.Domain.Entities;
+using Hiberus.Industria.Vektor.Domain.Enums;
 
-namespace Vektor.API.Application.DTOs;
+namespace Hiberus.Industria.Vektor.Application.DTOs;
 
 public record VehicleDto(
     Guid Id,

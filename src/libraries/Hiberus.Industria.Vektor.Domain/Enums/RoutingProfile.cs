@@ -1,4 +1,4 @@
-namespace Vektor.API.Domain.Enums;
+namespace Hiberus.Industria.Vektor.Domain.Enums;
 
 public enum RoutingProfile
 {

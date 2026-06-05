@@ -1,5 +1,4 @@
-// Vektor.API/Domain/Entities/Order.cs
-namespace Vektor.API.Domain.Entities;
+namespace Hiberus.Industria.Vektor.Domain.Entities;
 
 public class Order
 {
