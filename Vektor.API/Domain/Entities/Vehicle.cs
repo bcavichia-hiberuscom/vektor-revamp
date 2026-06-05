@@ -1,6 +1,8 @@
 // Vektor.API/Domain/Entities/Vehicle.cs
 namespace Vektor.API.Domain.Entities;
 
+using Vektor.API.Domain.Enums;
+
 public class Vehicle
 {
     public Guid Id { get; set; }
@@ -11,7 +13,7 @@ public class Vehicle
     public string? Model { get; set; }
     public int? Year { get; set; }
     public VehicleType Type { get; set; }
-    public string Status { get; set; } = "active";
+    public VehicleStatus Status { get; set; } = VehicleStatus.Active;
 
     // Telemetry
     public string? DeviceImei { get; set; }
