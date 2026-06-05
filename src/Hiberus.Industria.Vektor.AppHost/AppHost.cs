@@ -17,7 +17,7 @@ var api = builder
 
 // Frontend
 builder
-    .AddPnpmApp("vektor-client", "../services/Hiberus.Industria.Vektor.Client", scriptName: "dev")
+    .AddPnpmApp("vektor-client", "../Services/Hiberus.Industria.Vektor.Client", scriptName: "dev")
     .WithReference(api)
     .WaitFor(api);
 

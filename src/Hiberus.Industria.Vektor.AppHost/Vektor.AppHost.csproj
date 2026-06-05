@@ -14,6 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\services\Hiberus.Industria.Vektor.MigrationService\Hiberus.Industria.Vektor.MigrationService.csproj" />
-    <ProjectReference Include="..\services\Hiberus.Industria.Vektor.API\Hiberus.Industria.Vektor.API.csproj" />
+    <ProjectReference Include="..\Services\Hiberus.Industria.Vektor.API\Hiberus.Industria.Vektor.API.csproj" />
   </ItemGroup>
 </Project>

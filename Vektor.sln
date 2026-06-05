@@ -27,7 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vektor.ServiceDefaults", "s
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{984BB9B3-3FA3-BE33-9484-CAC21695A33C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hiberus.Industria.Vektor.API", "src\services\Hiberus.Industria.Vektor.API\Hiberus.Industria.Vektor.API.csproj", "{95BED7A2-4CBA-43E3-8200-F1962EE4BB5D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hiberus.Industria.Vektor.API", "src\Services\Hiberus.Industria.Vektor.API\Hiberus.Industria.Vektor.API.csproj", "{95BED7A2-4CBA-43E3-8200-F1962EE4BB5D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hiberus.Industria.Vektor.MigrationService", "Hiberus.Industria.Vektor.MigrationService", "{22127136-E4A3-F76E-0C63-5CF81D31C440}"
 EndProject
