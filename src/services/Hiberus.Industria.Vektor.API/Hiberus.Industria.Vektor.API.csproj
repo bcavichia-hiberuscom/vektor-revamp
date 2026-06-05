@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\libraries\Hiberus.Industria.Vektor.Application\Hiberus.Industria.Vektor.Application.csproj" />
-    <ProjectReference Include="..\..\libraries\Hiberus.Industria.Vektor.Infrastructure\Hiberus.Industria.Vektor.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Libraries\Hiberus.Industria.Vektor.Application\Hiberus.Industria.Vektor.Application.csproj" />
+    <ProjectReference Include="..\..\Libraries\Hiberus.Industria.Vektor.Infrastructure\Hiberus.Industria.Vektor.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
