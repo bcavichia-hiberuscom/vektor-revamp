@@ -1,0 +1,6 @@
+@Hiberus.Industria.Vektor.API_HostAddress = http://localhost:5136
+
+GET {{Hiberus.Industria.Vektor.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
