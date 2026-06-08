@@ -14,11 +14,10 @@ public class VektorDbContextFactory : IDesignTimeDbContextFactory<VektorDbContex
             .AddEnvironmentVariables()
             .Build();
 
-        const string ConnectionName = "vektor";
         var connectionString =
-            configuration.GetConnectionString(ConnectionName)
+            configuration.GetConnectionString(Constants.DatabaseConnectionName)
             ?? throw new InvalidOperationException(
-                $"Connection string '{ConnectionName}' not found."
+                $"Connection string '{Constants.DatabaseConnectionName}' not found."
             );
 
         var optionsBuilder = new DbContextOptionsBuilder<VektorDbContext>();
