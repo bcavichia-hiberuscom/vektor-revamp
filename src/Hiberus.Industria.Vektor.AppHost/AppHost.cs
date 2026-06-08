@@ -1,18 +1,23 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 // PostgreSQL
-var postgres = builder.AddPostgres("postgres").AddDatabase("vektor");
+var postgres = builder
+    .AddPostgres("postgres", port: 5434)
+    .WithDataVolume("vektor-postgres-data")
+    .WithLifetime(ContainerLifetime.Persistent);
+
+var db = postgres.AddDatabase("vektor");
 
 // Migrations
 var migrations = builder
     .AddProject<Projects.Hiberus_Industria_Vektor_MigrationService>("migrations")
-    .WithReference(postgres)
-    .WaitFor(postgres);
+    .WithReference(db)
+    .WaitFor(db);
 
 // API
 var api = builder
     .AddProject<Projects.Hiberus_Industria_Vektor_API>("vektor-api")
-    .WithReference(postgres)
+    .WithReference(db)
     .WaitFor(migrations);
 
 // Frontend
