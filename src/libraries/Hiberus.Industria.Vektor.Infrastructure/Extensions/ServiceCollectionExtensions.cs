@@ -1,0 +1,15 @@
+using Hiberus.Industria.Vektor.Application.Interfaces;
+using Hiberus.Industria.Vektor.Infrastructure.Repositories;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Hiberus.Industria.Vektor.Infrastructure;
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+    {
+        services.AddScoped<IVehicleRepository, VehicleRepository>();
+
+        return services;
+    }
+}
