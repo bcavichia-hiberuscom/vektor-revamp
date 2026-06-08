@@ -1,5 +1,4 @@
-using Hiberus.Industria.Vektor.Domain.Entities;
-using Hiberus.Industria.Vektor.Domain.Enums;
+using Hiberus.Industria.Vektor.Domain.Vehicle;
 
 namespace Hiberus.Industria.Vektor.Domain.Extensions;
 
