@@ -1,5 +1,4 @@
-using Hiberus.Industria.Vektor.Domain.Entities;
-using Hiberus.Industria.Vektor.Domain.Enums;
+using Hiberus.Industria.Vektor.Domain.Vehicle;
 
 namespace Hiberus.Industria.Vektor.Application.DTOs;
 
@@ -41,6 +40,5 @@ public record UpdateVehicleDto(
     string? LicensePlate,
     string? Brand,
     string? Model,
-    int? Year,
-    string Status
+    int? Year
 );

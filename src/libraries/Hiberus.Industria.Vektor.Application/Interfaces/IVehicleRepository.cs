@@ -1,5 +1,5 @@
 using Hiberus.Industria.Vektor.Application.DTOs;
-using Hiberus.Industria.Vektor.Domain.Entities;
+using Hiberus.Industria.Vektor.Domain.Vehicle;
 
 namespace Hiberus.Industria.Vektor.Application.Interfaces;
 

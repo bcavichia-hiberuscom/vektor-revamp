@@ -1,4 +1,11 @@
-using Hiberus.Industria.Vektor.Domain.Entities;
+using Hiberus.Industria.Vektor.Domain.ActiveVehicleRoute;
+using Hiberus.Industria.Vektor.Domain.Driver;
+using Hiberus.Industria.Vektor.Domain.DriverVehicleAssignment;
+using Hiberus.Industria.Vektor.Domain.Order;
+using Hiberus.Industria.Vektor.Domain.OrderAssignment;
+using Hiberus.Industria.Vektor.Domain.Tenant;
+using Hiberus.Industria.Vektor.Domain.User;
+using Hiberus.Industria.Vektor.Domain.Vehicle;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hiberus.Industria.Vektor.Infrastructure.Persistence;

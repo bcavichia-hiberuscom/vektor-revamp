@@ -1,6 +1,6 @@
 using Hiberus.Industria.Vektor.Application.DTOs;
 using Hiberus.Industria.Vektor.Application.Interfaces;
-using Hiberus.Industria.Vektor.Domain.Entities;
+using Hiberus.Industria.Vektor.Domain.Vehicle;
 using Hiberus.Industria.Vektor.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -46,12 +46,16 @@ public class VehicleRepository : IVehicleRepository
                 ct
             ) ?? throw new KeyNotFoundException();
 
-        vehicle.Label = dto.Label;
-        vehicle.LicensePlate = dto.LicensePlate;
-        vehicle.Brand = dto.Brand;
-        vehicle.Model = dto.Model;
-        vehicle.Year = dto.Year;
-        vehicle.UpdatedAt = DateTime.UtcNow;
+        var result = vehicle.Update(
+            dto.Label,
+            dto.LicensePlate,
+            dto.Brand,
+            dto.Model,
+            dto.Year,
+            "system"
+        );
+        if (result.IsError)
+            throw new InvalidOperationException(result.FirstError.Description);
 
         await _context.SaveChangesAsync(ct);
         return vehicle;
