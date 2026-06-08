@@ -16,5 +16,3 @@ public interface IVehicleRepository
     );
     Task DeleteAsync(Guid id, Guid tenantId, CancellationToken ct = default);
 }
-
-//todo falta servicio
