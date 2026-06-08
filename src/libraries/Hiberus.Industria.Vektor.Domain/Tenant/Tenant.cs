@@ -1,3 +1,4 @@
+using ErrorOr;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.Tenant;
@@ -20,12 +21,12 @@ public sealed class Tenant : IAuditable
 
     private Tenant() { }
 
-    public static Tenant Create(string name, string slug, string createdBy)
+    public static ErrorOr<Tenant> Create(string name, string slug, string createdBy)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name is required");
+            return Error.Validation("Tenant.Name", "Name is required");
         if (string.IsNullOrWhiteSpace(slug))
-            throw new ArgumentException("Slug is required");
+            return Error.Validation("Tenant.Slug", "Slug is required");
 
         return new Tenant
         {

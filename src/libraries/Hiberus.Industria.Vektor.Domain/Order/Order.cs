@@ -1,3 +1,4 @@
+using ErrorOr;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.Order;
@@ -26,7 +27,7 @@ public sealed class Order : IAuditable
 
     private Order() { }
 
-    public static Order Create(
+    public static ErrorOr<Order> Create(
         Guid tenantId,
         string label,
         double latitude,
@@ -39,9 +40,9 @@ public sealed class Order : IAuditable
     )
     {
         if (tenantId == Guid.Empty)
-            throw new ArgumentException("TenantId cannot be empty");
+            return Error.Validation("Order.TenantId", "TenantId cannot be empty");
         if (string.IsNullOrWhiteSpace(label))
-            throw new ArgumentException("Label is required");
+            return Error.Validation("Order.Label", "Label is required");
 
         return new Order
         {
@@ -60,13 +61,15 @@ public sealed class Order : IAuditable
         };
     }
 
-    public void Cancel(string updatedBy)
+    public ErrorOr<Order> Cancel(string updatedBy)
     {
         if (Status == OrderStatus.Completed)
-            throw new InvalidOperationException("Cannot cancel a completed order");
+            return Error.Conflict("Order.Status", "Cannot cancel a completed order");
 
         Status = OrderStatus.Cancelled;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
+
+        return this;
     }
 }

@@ -1,3 +1,4 @@
+using ErrorOr;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.OrderAssignment;
@@ -24,12 +25,12 @@ public sealed class OrderAssignment : IAuditable
 
     private OrderAssignment() { }
 
-    public static OrderAssignment Create(Guid orderId, Guid vehicleId, string createdBy)
+    public static ErrorOr<OrderAssignment> Create(Guid orderId, Guid vehicleId, string createdBy)
     {
         if (orderId == Guid.Empty)
-            throw new ArgumentException("OrderId cannot be empty");
+            return Error.Validation("OrderAssignment.OrderId", "OrderId cannot be empty");
         if (vehicleId == Guid.Empty)
-            throw new ArgumentException("VehicleId cannot be empty");
+            return Error.Validation("OrderAssignment.VehicleId", "VehicleId cannot be empty");
 
         return new OrderAssignment
         {
@@ -43,28 +44,43 @@ public sealed class OrderAssignment : IAuditable
         };
     }
 
-    public void Start(string updatedBy)
+    public ErrorOr<OrderAssignment> Start(string updatedBy)
     {
+        if (Status != OrderAssignmentStatus.Pending)
+            return Error.Conflict("OrderAssignment.Status", "Assignment is not in pending state");
+
         Status = OrderAssignmentStatus.InTransit;
         StartedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
+
+        return this;
     }
 
-    public void Complete(DateTime actualArrival, string updatedBy)
+    public ErrorOr<OrderAssignment> Complete(DateTime actualArrival, string updatedBy)
     {
+        if (Status != OrderAssignmentStatus.InTransit)
+            return Error.Conflict("OrderAssignment.Status", "Assignment is not in transit");
+
         Status = OrderAssignmentStatus.Completed;
         CompletedAt = DateTime.UtcNow;
         ActualArrival = actualArrival;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
+
+        return this;
     }
 
-    public void Fail(string reason, string updatedBy)
+    public ErrorOr<OrderAssignment> Fail(string reason, string updatedBy)
     {
+        if (string.IsNullOrWhiteSpace(reason))
+            return Error.Validation("OrderAssignment.FailureReason", "Failure reason is required");
+
         Status = OrderAssignmentStatus.Failed;
         FailureReason = reason;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
+
+        return this;
     }
 }

@@ -1,3 +1,4 @@
+using ErrorOr;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.User;
@@ -20,7 +21,7 @@ public sealed class User : IAuditable
 
     private User() { }
 
-    public static User Create(
+    public static ErrorOr<User> Create(
         Guid tenantId,
         string email,
         string? name,
@@ -29,9 +30,9 @@ public sealed class User : IAuditable
     )
     {
         if (tenantId == Guid.Empty)
-            throw new ArgumentException("TenantId cannot be empty");
+            return Error.Validation("User.TenantId", "TenantId cannot be empty");
         if (string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("Email is required");
+            return Error.Validation("User.Email", "Email is required");
 
         return new User
         {

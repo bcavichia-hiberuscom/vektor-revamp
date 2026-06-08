@@ -1,3 +1,4 @@
+using ErrorOr;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.Driver;
@@ -31,7 +32,7 @@ public sealed class Driver : IAuditable
 
     private Driver() { }
 
-    public static Driver Create(
+    public static ErrorOr<Driver> Create(
         Guid tenantId,
         string name,
         LicenseType licenseType,
@@ -42,9 +43,9 @@ public sealed class Driver : IAuditable
     )
     {
         if (tenantId == Guid.Empty)
-            throw new ArgumentException("TenantId cannot be empty");
+            return Error.Validation("Driver.TenantId", "TenantId cannot be empty");
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name is required");
+            return Error.Validation("Driver.Name", "Name is required");
 
         return new Driver
         {

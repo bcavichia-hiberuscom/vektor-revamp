@@ -1,3 +1,4 @@
+using ErrorOr;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.ActiveVehicleRoute;
@@ -20,7 +21,7 @@ public sealed class ActiveVehicleRoute : IAuditable
 
     private ActiveVehicleRoute() { }
 
-    public static ActiveVehicleRoute Create(
+    public static ErrorOr<ActiveVehicleRoute> Create(
         Guid tenantId,
         Guid vehicleId,
         string routePayload,
@@ -29,11 +30,11 @@ public sealed class ActiveVehicleRoute : IAuditable
     )
     {
         if (tenantId == Guid.Empty)
-            throw new ArgumentException("TenantId cannot be empty");
+            return Error.Validation("ActiveVehicleRoute.TenantId", "TenantId cannot be empty");
         if (vehicleId == Guid.Empty)
-            throw new ArgumentException("VehicleId cannot be empty");
+            return Error.Validation("ActiveVehicleRoute.VehicleId", "VehicleId cannot be empty");
         if (string.IsNullOrWhiteSpace(routePayload))
-            throw new ArgumentException("RoutePayload is required");
+            return Error.Validation("ActiveVehicleRoute.RoutePayload", "RoutePayload is required");
 
         return new ActiveVehicleRoute
         {
@@ -48,11 +49,20 @@ public sealed class ActiveVehicleRoute : IAuditable
         };
     }
 
-    public void UpdateRoute(string routePayload, string associatedOrderIds, string updatedBy)
+    public ErrorOr<ActiveVehicleRoute> UpdateRoute(
+        string routePayload,
+        string associatedOrderIds,
+        string updatedBy
+    )
     {
+        if (string.IsNullOrWhiteSpace(routePayload))
+            return Error.Validation("ActiveVehicleRoute.RoutePayload", "RoutePayload is required");
+
         RoutePayload = routePayload;
         AssociatedOrderIds = associatedOrderIds;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
+
+        return this;
     }
 }

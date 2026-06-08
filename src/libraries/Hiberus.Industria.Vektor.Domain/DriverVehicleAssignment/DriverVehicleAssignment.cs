@@ -1,3 +1,4 @@
+using ErrorOr;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.DriverVehicleAssignment;
@@ -20,12 +21,19 @@ public sealed class DriverVehicleAssignment : IAuditable
 
     private DriverVehicleAssignment() { }
 
-    public static DriverVehicleAssignment Create(Guid driverId, Guid vehicleId, string createdBy)
+    public static ErrorOr<DriverVehicleAssignment> Create(
+        Guid driverId,
+        Guid vehicleId,
+        string createdBy
+    )
     {
         if (driverId == Guid.Empty)
-            throw new ArgumentException("DriverId cannot be empty");
+            return Error.Validation("DriverVehicleAssignment.DriverId", "DriverId cannot be empty");
         if (vehicleId == Guid.Empty)
-            throw new ArgumentException("VehicleId cannot be empty");
+            return Error.Validation(
+                "DriverVehicleAssignment.VehicleId",
+                "VehicleId cannot be empty"
+            );
 
         return new DriverVehicleAssignment
         {
@@ -38,10 +46,15 @@ public sealed class DriverVehicleAssignment : IAuditable
         };
     }
 
-    public void Unassign(string updatedBy)
+    public ErrorOr<DriverVehicleAssignment> Unassign(string updatedBy)
     {
+        if (UnassignedAt is not null)
+            return Error.Conflict("DriverVehicleAssignment.UnassignedAt", "Already unassigned");
+
         UnassignedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
+
+        return this;
     }
 }
