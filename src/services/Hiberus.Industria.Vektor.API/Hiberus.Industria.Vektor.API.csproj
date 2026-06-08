@@ -1,19 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.16" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Hiberus.Industria.Vektor.Application\Hiberus.Industria.Vektor.Application.csproj" />
     <ProjectReference Include="..\..\Libraries\Hiberus.Industria.Vektor.Infrastructure\Hiberus.Industria.Vektor.Infrastructure.csproj" />
   </ItemGroup>
-
 </Project>

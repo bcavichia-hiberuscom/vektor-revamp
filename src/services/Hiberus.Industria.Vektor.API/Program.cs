@@ -1,26 +1,42 @@
+using System.Reflection;
+using System.Text.Json.Serialization;
 using Hiberus.Industria.Vektor.Infrastructure;
 using Hiberus.Industria.Vektor.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder
+    .Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
-builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    options.IncludeXmlComments(xmlPath);
+});
+
 builder.AddNpgsqlDbContext<VektorDbContext>(Constants.DatabaseConnectionName);
+
 builder.Services.AddInfrastructureServices();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-}
+    app.UseSwagger();
 
-app.UseHttpsRedirection();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Vektor API v1");
+    });
+}
 
 app.UseAuthorization();
 
