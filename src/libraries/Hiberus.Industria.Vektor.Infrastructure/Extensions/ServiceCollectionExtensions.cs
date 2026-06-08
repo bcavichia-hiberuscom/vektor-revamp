@@ -9,6 +9,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
         services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<VehicleAppService>();
 
         return services;
     }

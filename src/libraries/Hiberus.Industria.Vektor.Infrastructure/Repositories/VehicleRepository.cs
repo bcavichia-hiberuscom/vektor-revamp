@@ -1,4 +1,3 @@
-using Hiberus.Industria.Vektor.Application.DTOs;
 using Hiberus.Industria.Vektor.Application.Interfaces;
 using Hiberus.Industria.Vektor.Domain.Vehicle;
 using Hiberus.Industria.Vektor.Infrastructure.Persistence;
@@ -33,32 +32,10 @@ public class VehicleRepository : IVehicleRepository
         return vehicle;
     }
 
-    public async Task<Vehicle> UpdateAsync(
-        Guid id,
-        Guid tenantId,
-        UpdateVehicleDto dto,
-        CancellationToken ct = default
-    )
+    public async Task UpdateAsync(Vehicle vehicle, CancellationToken ct = default)
     {
-        var vehicle =
-            await _context.Vehicles.FirstOrDefaultAsync(
-                v => v.Id == id && v.TenantId == tenantId,
-                ct
-            ) ?? throw new KeyNotFoundException();
-
-        var result = vehicle.Update(
-            dto.Label,
-            dto.LicensePlate,
-            dto.Brand,
-            dto.Model,
-            dto.Year,
-            "system"
-        );
-        if (result.IsError)
-            throw new InvalidOperationException(result.FirstError.Description);
-
+        _context.Vehicles.Update(vehicle);
         await _context.SaveChangesAsync(ct);
-        return vehicle;
     }
 
     public async Task DeleteAsync(Guid id, Guid tenantId, CancellationToken ct = default)
