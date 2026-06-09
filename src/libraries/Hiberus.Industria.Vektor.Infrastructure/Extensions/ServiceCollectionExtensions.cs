@@ -10,6 +10,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.AddScoped<VehicleAppService>();
+        services.AddScoped<IDriverRepository, DriverRepository>();
+        services.AddScoped<DriverAppService>();
 
         return services;
     }

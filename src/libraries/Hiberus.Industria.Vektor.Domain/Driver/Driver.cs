@@ -63,6 +63,39 @@ public sealed class Driver : IAuditable
         };
     }
 
+    public ErrorOr<Driver> Update(
+        string name,
+        string? phoneNumber,
+        LicenseType licenseType,
+        string? licenseNumber,
+        DateTime? licenseExpiryDate,
+        bool isAvailable,
+        string timezone,
+        int? workdayStartTime,
+        int? workdayEndTime,
+        string updatedBy
+    )
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return Error.Validation("Driver.Name", "Name is required");
+        if (string.IsNullOrWhiteSpace(timezone))
+            return Error.Validation("Driver.Timezone", "Timezone is required");
+
+        Name = name.Trim();
+        PhoneNumber = phoneNumber?.Trim();
+        LicenseType = licenseType;
+        LicenseNumber = licenseNumber?.Trim();
+        LicenseExpiryDate = licenseExpiryDate;
+        IsAvailable = isAvailable;
+        Timezone = timezone;
+        WorkdayStartTime = workdayStartTime;
+        WorkdayEndTime = workdayEndTime;
+        UpdatedAt = DateTime.UtcNow;
+        UpdatedBy = updatedBy;
+
+        return this;
+    }
+
     public bool CanDrive(Vehicle.VehicleType vehicleType) =>
         vehicleType switch
         {
