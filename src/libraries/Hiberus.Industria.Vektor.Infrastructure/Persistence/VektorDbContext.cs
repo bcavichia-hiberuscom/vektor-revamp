@@ -3,6 +3,7 @@ using Hiberus.Industria.Vektor.Domain.Driver;
 using Hiberus.Industria.Vektor.Domain.DriverVehicleAssignment;
 using Hiberus.Industria.Vektor.Domain.Order;
 using Hiberus.Industria.Vektor.Domain.OrderAssignment;
+using Hiberus.Industria.Vektor.Domain.RouteHistory;
 using Hiberus.Industria.Vektor.Domain.Tenant;
 using Hiberus.Industria.Vektor.Domain.User;
 using Hiberus.Industria.Vektor.Domain.Vehicle;
@@ -24,6 +25,7 @@ public class VektorDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderAssignment> OrderAssignments => Set<OrderAssignment>();
     public DbSet<ActiveVehicleRoute> ActiveVehicleRoutes => Set<ActiveVehicleRoute>();
+    public DbSet<RouteHistory> RouteHistories => Set<RouteHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
