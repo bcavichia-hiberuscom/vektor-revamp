@@ -6,6 +6,7 @@ namespace Hiberus.Industria.Vektor.Domain.OrderAssignment;
 public sealed class OrderAssignment : IAuditable
 {
     public Guid Id { get; private set; }
+    public Guid TenantId { get; private set; }
     public Guid OrderId { get; private set; }
     public Guid VehicleId { get; private set; }
     public OrderAssignmentStatus Status { get; private set; }
@@ -20,13 +21,21 @@ public sealed class OrderAssignment : IAuditable
     public string? UpdatedBy { get; private set; }
 
     // Navigation properties
+    public Tenant.Tenant Tenant { get; private set; } = null!;
     public Order.Order Order { get; private set; } = null!;
     public Vehicle.Vehicle Vehicle { get; private set; } = null!;
 
     private OrderAssignment() { }
 
-    public static ErrorOr<OrderAssignment> Create(Guid orderId, Guid vehicleId, string createdBy)
+    public static ErrorOr<OrderAssignment> Create(
+        Guid tenantId,
+        Guid orderId,
+        Guid vehicleId,
+        string createdBy
+    )
     {
+        if (tenantId == Guid.Empty)
+            return Error.Validation("OrderAssignment.TenantId", "TenantId cannot be empty");
         if (orderId == Guid.Empty)
             return Error.Validation("OrderAssignment.OrderId", "OrderId cannot be empty");
         if (vehicleId == Guid.Empty)
@@ -35,6 +44,7 @@ public sealed class OrderAssignment : IAuditable
         return new OrderAssignment
         {
             Id = Guid.NewGuid(),
+            TenantId = tenantId,
             OrderId = orderId,
             VehicleId = vehicleId,
             Status = OrderAssignmentStatus.Pending,
