@@ -61,6 +61,33 @@ public sealed class Order : IAuditable
         };
     }
 
+    public ErrorOr<Order> Update(
+        string label,
+        double latitude,
+        double longitude,
+        string updatedBy,
+        string? externalOrderId = null,
+        string? description = null,
+        string? customerName = null,
+        string? customerPhone = null
+    )
+    {
+        if (string.IsNullOrWhiteSpace(label))
+            return Error.Validation("Order.Label", "Label is required");
+
+        Label = label.Trim();
+        Latitude = latitude;
+        Longitude = longitude;
+        ExternalOrderId = externalOrderId;
+        Description = description?.Trim();
+        CustomerName = customerName?.Trim();
+        CustomerPhone = customerPhone?.Trim();
+        UpdatedAt = DateTime.UtcNow;
+        UpdatedBy = updatedBy;
+
+        return this;
+    }
+
     public ErrorOr<Order> Cancel(string updatedBy)
     {
         if (Status == OrderStatus.Completed)
