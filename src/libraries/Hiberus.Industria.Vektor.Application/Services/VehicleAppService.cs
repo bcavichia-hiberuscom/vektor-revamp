@@ -28,7 +28,7 @@ public class VehicleAppService
             tenantId,
             dto.Label,
             dto.Type,
-            "system",
+            "system", //replace with user when auth is implemented
             dto.LicensePlate,
             dto.Brand,
             dto.Model,
