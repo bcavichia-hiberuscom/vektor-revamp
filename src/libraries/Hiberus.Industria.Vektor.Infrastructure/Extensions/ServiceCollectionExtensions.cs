@@ -18,6 +18,14 @@ public static class ServiceCollectionExtensions
         services.AddScoped<UserAppService>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<TenantAppService>();
+        services.AddScoped<IActiveVehicleRouteRepository, ActiveVehicleRouteRepository>();
+        services.AddScoped<ActiveVehicleRouteAppService>();
+        services.AddScoped<IRouteHistoryRepository, RouteHistoryRepository>();
+        services.AddScoped<RouteHistoryAppService>();
+        services.AddScoped<IOrderAssignmentRepository, OrderAssignmentRepository>();
+        services.AddScoped<OrderAssignmentAppService>();
+        services.AddScoped<IDriverVehicleAssignmentRepository, DriverVehicleAssignmentRepository>();
+        services.AddScoped<DriverVehicleAssignmentAppService>();
 
         return services;
     }
