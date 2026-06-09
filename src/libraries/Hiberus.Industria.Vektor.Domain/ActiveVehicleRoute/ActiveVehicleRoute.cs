@@ -18,6 +18,7 @@ public sealed class ActiveVehicleRoute : IAuditable
 
     // Navigation properties
     public Tenant.Tenant Tenant { get; private set; } = null!;
+    public Vehicle.Vehicle Vehicle { get; private set; } = null!;
 
     private ActiveVehicleRoute() { }
 
@@ -35,6 +36,8 @@ public sealed class ActiveVehicleRoute : IAuditable
             return Error.Validation("ActiveVehicleRoute.VehicleId", "VehicleId cannot be empty");
         if (string.IsNullOrWhiteSpace(routePayload))
             return Error.Validation("ActiveVehicleRoute.RoutePayload", "RoutePayload is required");
+        if (string.IsNullOrWhiteSpace(createdBy))
+            return Error.Validation("ActiveVehicleRoute.CreatedBy", "CreatedBy is required");
 
         return new ActiveVehicleRoute
         {
@@ -57,6 +60,8 @@ public sealed class ActiveVehicleRoute : IAuditable
     {
         if (string.IsNullOrWhiteSpace(routePayload))
             return Error.Validation("ActiveVehicleRoute.RoutePayload", "RoutePayload is required");
+        if (string.IsNullOrWhiteSpace(updatedBy))
+            return Error.Validation("ActiveVehicleRoute.UpdatedBy", "UpdatedBy is required");
 
         RoutePayload = routePayload;
         AssociatedOrderIds = associatedOrderIds;
@@ -64,5 +69,21 @@ public sealed class ActiveVehicleRoute : IAuditable
         UpdatedBy = updatedBy;
 
         return this;
+    }
+
+    // Devuelve los datos necesarios para construir el RouteHistory en el service
+    public ErrorOr<RouteHistory.RouteHistory> Complete(string completedBy)
+    {
+        if (string.IsNullOrWhiteSpace(completedBy))
+            return Error.Validation("ActiveVehicleRoute.CompletedBy", "CompletedBy is required");
+
+        return RouteHistory.RouteHistory.Create(
+            tenantId: TenantId,
+            vehicleId: VehicleId,
+            routePayload: RoutePayload,
+            associatedOrderIds: AssociatedOrderIds,
+            startedAt: StartedAt,
+            createdBy: completedBy
+        );
     }
 }
