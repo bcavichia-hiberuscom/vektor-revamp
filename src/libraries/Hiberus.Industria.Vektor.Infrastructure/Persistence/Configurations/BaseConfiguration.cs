@@ -23,5 +23,15 @@ public abstract class BaseConfiguration<T> : IEntityTypeConfiguration<T>
         builder.Property(e => e.CreatedBy).HasColumnName("created_by").IsRequired();
 
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+
+        if (typeof(ISoftDeletable).IsAssignableFrom(typeof(T)))
+        {
+            builder.Property("IsActive").HasColumnName("is_active").IsRequired();
+            builder
+                .Property("DeletedAt")
+                .HasColumnName("deleted_at")
+                .HasColumnType("timestamp with time zone");
+            builder.Property("DeletedBy").HasColumnName("deleted_by");
+        }
     }
 }
