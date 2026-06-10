@@ -1,5 +1,5 @@
 using ErrorOr;
-using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Application.DTOs.DriverVehicleAssignment;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hiberus.Industria.Vektor.API.Controllers;
@@ -19,18 +19,8 @@ public class DriverVehicleAssignmentsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<DriverVehicleAssignmentDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] Guid tenantId, CancellationToken ct)
     {
-        var assignments = await _service.GetAll(tenantId, ct);
-
-        var response = assignments.Select(a => new DriverVehicleAssignmentDto(
-            a.Id,
-            a.TenantId,
-            a.DriverId,
-            a.VehicleId,
-            a.AssignedAt,
-            a.UnassignedAt
-        ));
-
-        return Ok(response);
+        var assignments = await _service.GetAllAsDto(tenantId, ct);
+        return Ok(assignments);
     }
 
     [HttpGet("{id}")]
@@ -42,21 +32,12 @@ public class DriverVehicleAssignmentsController : ControllerBase
         CancellationToken ct
     )
     {
-        var assignment = await _service.GetById(id, tenantId, ct);
+        var assignment = await _service.GetByIdAsDto(id, tenantId, ct);
 
         if (assignment is null)
             return NotFound();
 
-        return Ok(
-            new DriverVehicleAssignmentDto(
-                assignment.Id,
-                assignment.TenantId,
-                assignment.DriverId,
-                assignment.VehicleId,
-                assignment.AssignedAt,
-                assignment.UnassignedAt
-            )
-        );
+        return Ok(assignment);
     }
 
     [HttpGet("driver/{driverId}")]
@@ -67,18 +48,8 @@ public class DriverVehicleAssignmentsController : ControllerBase
         CancellationToken ct
     )
     {
-        var assignments = await _service.GetByDriver(driverId, tenantId, ct);
-
-        var response = assignments.Select(a => new DriverVehicleAssignmentDto(
-            a.Id,
-            a.TenantId,
-            a.DriverId,
-            a.VehicleId,
-            a.AssignedAt,
-            a.UnassignedAt
-        ));
-
-        return Ok(response);
+        var assignments = await _service.GetByDriverAsDto(driverId, tenantId, ct);
+        return Ok(assignments);
     }
 
     [HttpGet("vehicle/{vehicleId}")]
@@ -89,18 +60,8 @@ public class DriverVehicleAssignmentsController : ControllerBase
         CancellationToken ct
     )
     {
-        var assignments = await _service.GetByVehicle(vehicleId, tenantId, ct);
-
-        var response = assignments.Select(a => new DriverVehicleAssignmentDto(
-            a.Id,
-            a.TenantId,
-            a.DriverId,
-            a.VehicleId,
-            a.AssignedAt,
-            a.UnassignedAt
-        ));
-
-        return Ok(response);
+        var assignments = await _service.GetByVehicleAsDto(vehicleId, tenantId, ct);
+        return Ok(assignments);
     }
 
     [HttpPost]
@@ -118,18 +79,12 @@ public class DriverVehicleAssignmentsController : ControllerBase
             return BadRequest(result.Errors);
 
         var assignment = result.Value;
-
+        var assignmentDto = await _service.GetByIdAsDto(assignment.Id, tenantId, ct);
+        
         return CreatedAtAction(
             nameof(GetById),
             new { id = assignment.Id, tenantId },
-            new DriverVehicleAssignmentDto(
-                assignment.Id,
-                assignment.TenantId,
-                assignment.DriverId,
-                assignment.VehicleId,
-                assignment.AssignedAt,
-                assignment.UnassignedAt
-            )
+            assignmentDto
         );
     }
 
@@ -153,16 +108,8 @@ public class DriverVehicleAssignmentsController : ControllerBase
         }
 
         var assignment = result.Value;
-
-        return Ok(
-            new DriverVehicleAssignmentDto(
-                assignment.Id,
-                assignment.TenantId,
-                assignment.DriverId,
-                assignment.VehicleId,
-                assignment.AssignedAt,
-                assignment.UnassignedAt
-            )
-        );
+        var assignmentDto = await _service.GetByIdAsDto(assignment.Id, tenantId, ct);
+        
+        return Ok(assignmentDto);
     }
 }
