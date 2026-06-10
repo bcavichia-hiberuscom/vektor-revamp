@@ -1,4 +1,6 @@
+using Hiberus.Industria.Vektor.Application.Common.Mappings;
 using Hiberus.Industria.Vektor.Application.Common.Pagination;
+using Hiberus.Industria.Vektor.Application.DTOs.Tenant;
 using Hiberus.Industria.Vektor.Application.Interfaces;
 using Hiberus.Industria.Vektor.Domain.Tenant;
 using Hiberus.Industria.Vektor.Infrastructure.Persistence;
@@ -20,6 +22,46 @@ public class TenantRepository : ITenantRepository
     /// </summary>
     private IQueryable<Tenant> ActiveTenants =>
         _context.Tenants.AsNoTracking().Where(t => t.DeletedAt == null);
+
+    // ==================== DTO Methods (Database-Level Projections) ====================
+
+    /// <summary>
+    /// Retrieves tenants as DTOs with pagination using database-level projections.
+    /// Filters only active tenants and projects to DTO at database level for optimal performance.
+    /// </summary>
+    public async Task<(IEnumerable<TenantDto> Items, int TotalCount)> GetAllPaginatedAsDtoAsync(
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    )
+    {
+        var paginationParams = new PaginationParams(pageNumber, pageSize);
+
+        // Count total records matching the filter
+        var totalCount = await ActiveTenants.CountAsync(ct);
+
+        // Retrieve paginated data with database-level projection
+        var items = await ActiveTenants
+            .OrderByDescending(t => t.CreatedAt)
+            .Skip(paginationParams.GetSkip())
+            .Take(paginationParams.PageSize)
+            // Project to DTO at database level using compiled LINQ expressions
+            .Select(ProjectionExtensions.ToTenantDtoExpression)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
+    }
+
+    /// <summary>
+    /// Retrieves a single tenant as DTO by ID using database-level projection.
+    /// Filters only active tenants.
+    /// </summary>
+    public async Task<TenantDto?> GetByIdAsDtoAsync(Guid id, CancellationToken ct = default) =>
+        await ActiveTenants
+            .Where(t => t.Id == id)
+            // Project to DTO at database level using compiled LINQ expressions
+            .Select(ProjectionExtensions.ToTenantDtoExpression)
+            .FirstOrDefaultAsync(ct);
 
     /// <summary>
     /// Retrieves tenants with pagination, filtering only active tenants.
@@ -62,10 +104,7 @@ public class TenantRepository : ITenantRepository
     /// Retrieves a single tenant by slug, filtering by active tenants only.
     /// </summary>
     public async Task<Tenant?> GetBySlugAsync(string slug, CancellationToken ct = default) =>
-        await ActiveTenants.FirstOrDefaultAsync(
-            t => t.Slug == slug.Trim().ToLowerInvariant(),
-            ct
-        );
+        await ActiveTenants.FirstOrDefaultAsync(t => t.Slug == slug.Trim().ToLowerInvariant(), ct);
 
     public async Task<Tenant> CreateAsync(Tenant tenant, CancellationToken ct = default)
     {

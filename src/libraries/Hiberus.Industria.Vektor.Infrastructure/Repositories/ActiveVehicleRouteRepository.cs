@@ -1,4 +1,6 @@
+using Hiberus.Industria.Vektor.Application.Common.Mappings;
 using Hiberus.Industria.Vektor.Application.Common.Pagination;
+using Hiberus.Industria.Vektor.Application.DTOs.Route;
 using Hiberus.Industria.Vektor.Application.Interfaces;
 using Hiberus.Industria.Vektor.Domain.ActiveVehicleRoute;
 using Hiberus.Industria.Vektor.Domain.RouteHistory;
@@ -96,6 +98,62 @@ public class ActiveVehicleRouteRepository : IActiveVehicleRouteRepository
             .Include(r => r.Tenant)
             .FirstOrDefaultAsync(ct);
 
+    /// <summary>
+    /// Retrieves active vehicle routes with pagination, returning DTOs with nested relations.
+    /// Uses database-level projection to avoid N+1 queries.
+    /// </summary>
+    public async Task<(
+        IEnumerable<ActiveVehicleRouteDto> Items,
+        int TotalCount
+    )> GetAllPaginatedAsDtoAsync(
+        Guid tenantId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    )
+    {
+        var paginationParams = new PaginationParams(pageNumber, pageSize);
+
+        // Get total count
+        var totalCount = await _context
+            .ActiveVehicleRoutes.AsNoTracking()
+            .Where(r => r.TenantId == tenantId)
+            .CountAsync(ct);
+
+        // Get paginated DTOs via projection
+        var dtos = await _context
+            .ActiveVehicleRoutes.AsNoTracking()
+            .Where(r => r.TenantId == tenantId)
+            .Include(r => r.Vehicle)
+            .ThenInclude(v => v.Tenant)
+            .Include(r => r.Tenant)
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip(paginationParams.GetSkip())
+            .Take(paginationParams.PageSize)
+            .Select(ProjectionExtensions.ToActiveVehicleRouteDtoExpression)
+            .ToListAsync(ct);
+
+        return (dtos, totalCount);
+    }
+
+    /// <summary>
+    /// Retrieves a single active vehicle route by ID, returning DTO with nested relations.
+    /// Uses database-level projection for optimal performance.
+    /// </summary>
+    public async Task<ActiveVehicleRouteDto?> GetByIdAsDtoAsync(
+        Guid id,
+        Guid tenantId,
+        CancellationToken ct
+    ) =>
+        await _context
+            .ActiveVehicleRoutes.AsNoTracking()
+            .Where(r => r.Id == id && r.TenantId == tenantId)
+            .Include(r => r.Vehicle)
+            .ThenInclude(v => v.Tenant)
+            .Include(r => r.Tenant)
+            .Select(ProjectionExtensions.ToActiveVehicleRouteDtoExpression)
+            .FirstOrDefaultAsync(ct);
+
     public async Task<ActiveVehicleRoute> CreateAsync(
         ActiveVehicleRoute route,
         CancellationToken ct = default
@@ -142,14 +200,14 @@ public class RouteHistoryRepository : IRouteHistoryRepository
         var paginationParams = new PaginationParams(pageNumber, pageSize);
 
         // Get total count without loading data
-        var totalCount = await _context.RouteHistories
-            .AsNoTracking()
+        var totalCount = await _context
+            .RouteHistories.AsNoTracking()
             .Where(h => h.TenantId == tenantId)
             .CountAsync(ct);
 
         // Get paginated data with eager-loaded relations
-        var items = await _context.RouteHistories
-            .AsNoTracking()
+        var items = await _context
+            .RouteHistories.AsNoTracking()
             .Where(h => h.TenantId == tenantId)
             .OrderByDescending(h => h.FinishedAt)
             .Skip(paginationParams.GetSkip())
@@ -185,11 +243,65 @@ public class RouteHistoryRepository : IRouteHistoryRepository
         Guid tenantId,
         CancellationToken ct = default
     ) =>
-        await _context.RouteHistories.AsNoTracking()
-            .FirstOrDefaultAsync(
-                h => h.Id == id && h.TenantId == tenantId,
-                ct
-            );
+        await _context
+            .RouteHistories.AsNoTracking()
+            .FirstOrDefaultAsync(h => h.Id == id && h.TenantId == tenantId, ct);
+
+    /// <summary>
+    /// Retrieves route history records with pagination, returning DTOs with nested relations.
+    /// Uses database-level projection to avoid N+1 queries.
+    /// </summary>
+    public async Task<(
+        IEnumerable<RouteHistoryDto> Items,
+        int TotalCount
+    )> GetAllPaginatedAsDtoAsync(
+        Guid tenantId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    )
+    {
+        var paginationParams = new PaginationParams(pageNumber, pageSize);
+
+        // Get total count
+        var totalCount = await _context
+            .RouteHistories.AsNoTracking()
+            .Where(h => h.TenantId == tenantId)
+            .CountAsync(ct);
+
+        // Get paginated DTOs via projection
+        var dtos = await _context
+            .RouteHistories.AsNoTracking()
+            .Where(h => h.TenantId == tenantId)
+            .Include(h => h.Vehicle)
+            .ThenInclude(v => v.Tenant)
+            .Include(h => h.Tenant)
+            .OrderByDescending(h => h.CreatedAt)
+            .Skip(paginationParams.GetSkip())
+            .Take(paginationParams.PageSize)
+            .Select(ProjectionExtensions.ToRouteHistoryDtoExpression)
+            .ToListAsync(ct);
+
+        return (dtos, totalCount);
+    }
+
+    /// <summary>
+    /// Retrieves a single route history record by ID, returning DTO with nested relations.
+    /// Uses database-level projection for optimal performance.
+    /// </summary>
+    public async Task<RouteHistoryDto?> GetByIdAsDtoAsync(
+        Guid id,
+        Guid tenantId,
+        CancellationToken ct
+    ) =>
+        await _context
+            .RouteHistories.AsNoTracking()
+            .Where(h => h.Id == id && h.TenantId == tenantId)
+            .Include(h => h.Vehicle)
+            .ThenInclude(v => v.Tenant)
+            .Include(h => h.Tenant)
+            .Select(ProjectionExtensions.ToRouteHistoryDtoExpression)
+            .FirstOrDefaultAsync(ct);
 
     public async Task<RouteHistory> CreateAsync(
         RouteHistory history,

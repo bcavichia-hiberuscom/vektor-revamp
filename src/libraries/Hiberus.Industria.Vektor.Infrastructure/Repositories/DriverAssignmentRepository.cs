@@ -1,4 +1,6 @@
+using Hiberus.Industria.Vektor.Application.Common.Mappings;
 using Hiberus.Industria.Vektor.Application.Common.Pagination;
+using Hiberus.Industria.Vektor.Application.DTOs.DriverVehicleAssignment;
 using Hiberus.Industria.Vektor.Application.Interfaces;
 using Hiberus.Industria.Vektor.Domain.DriverVehicleAssignment;
 using Hiberus.Industria.Vektor.Infrastructure.Persistence;
@@ -113,6 +115,66 @@ public class DriverVehicleAssignmentRepository : IDriverVehicleAssignmentReposit
             .Include(a => a.Vehicle)
             .OrderByDescending(a => a.AssignedAt)
             .ToListAsync(ct);
+
+    /// <summary>
+    /// Retrieves driver vehicle assignments with pagination, returning DTOs with nested relations.
+    /// Uses database-level projection to avoid N+1 queries.
+    /// </summary>
+    public async Task<(
+        IEnumerable<DriverVehicleAssignmentDto> Items,
+        int TotalCount
+    )> GetAllPaginatedAsDtoAsync(
+        Guid tenantId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    )
+    {
+        var paginationParams = new PaginationParams(pageNumber, pageSize);
+
+        // Get total count
+        var totalCount = await _context
+            .DriverVehicleAssignments.AsNoTracking()
+            .Where(a => a.TenantId == tenantId)
+            .CountAsync(ct);
+
+        // Get paginated DTOs via projection
+        var dtos = await _context
+            .DriverVehicleAssignments.AsNoTracking()
+            .Where(a => a.TenantId == tenantId)
+            .Include(a => a.Driver)
+            .ThenInclude(d => d.Tenant)
+            .Include(a => a.Vehicle)
+            .ThenInclude(v => v.Tenant)
+            .Include(a => a.Tenant)
+            .OrderByDescending(a => a.AssignedAt)
+            .Skip(paginationParams.GetSkip())
+            .Take(paginationParams.PageSize)
+            .Select(ProjectionExtensions.ToDriverVehicleAssignmentDtoExpression)
+            .ToListAsync(ct);
+
+        return (dtos, totalCount);
+    }
+
+    /// <summary>
+    /// Retrieves a single driver vehicle assignment by ID, returning DTO with nested relations.
+    /// Uses database-level projection for optimal performance.
+    /// </summary>
+    public async Task<DriverVehicleAssignmentDto?> GetByIdAsDtoAsync(
+        Guid id,
+        Guid tenantId,
+        CancellationToken ct
+    ) =>
+        await _context
+            .DriverVehicleAssignments.AsNoTracking()
+            .Where(a => a.Id == id && a.TenantId == tenantId)
+            .Include(a => a.Driver)
+            .ThenInclude(d => d.Tenant)
+            .Include(a => a.Vehicle)
+            .ThenInclude(v => v.Tenant)
+            .Include(a => a.Tenant)
+            .Select(ProjectionExtensions.ToDriverVehicleAssignmentDtoExpression)
+            .FirstOrDefaultAsync(ct);
 
     public async Task<DriverVehicleAssignment> CreateAsync(
         DriverVehicleAssignment assignment,
