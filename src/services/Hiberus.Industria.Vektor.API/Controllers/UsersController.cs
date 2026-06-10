@@ -1,5 +1,5 @@
 using ErrorOr;
-using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Application.DTOs.User;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hiberus.Industria.Vektor.API.Controllers;
@@ -16,10 +16,15 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] Guid tenantId, CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid tenantId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default
+    )
     {
-        var users = await _service.GetAll(tenantId, ct);
-        return Ok(users.Select(ToDto));
+        var result = await _service.GetAllPaginatedAsync(tenantId, pageNumber, pageSize, ct);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
@@ -29,12 +34,12 @@ public class UsersController : ControllerBase
         CancellationToken ct
     )
     {
-        var user = await _service.GetById(id, tenantId, ct);
+        var user = await _service.GetByIdAsDto(id, tenantId, ct);
 
         if (user is null)
             return NotFound();
 
-        return Ok(ToDto(user));
+        return Ok(user);
     }
 
     [HttpPost]
@@ -46,7 +51,9 @@ public class UsersController : ControllerBase
             return BadRequest(result.Errors);
 
         var u = result.Value;
-        return CreatedAtAction(nameof(GetById), new { id = u.Id, tenantId = u.TenantId }, ToDto(u));
+        var userDto = await _service.GetByIdAsDto(u.Id, u.TenantId, ct);
+        
+        return CreatedAtAction(nameof(GetById), new { id = u.Id, tenantId = u.TenantId }, userDto);
     }
 
     [HttpPut("{id}")]
@@ -62,7 +69,9 @@ public class UsersController : ControllerBase
         if (result.IsError)
             return BadRequest(result.Errors);
 
-        return Ok(ToDto(result.Value));
+        var userDto = await _service.GetByIdAsDto(result.Value.Id, tenantId, ct);
+        
+        return Ok(userDto);
     }
 
     [HttpDelete("{id}")]
@@ -84,5 +93,5 @@ public class UsersController : ControllerBase
 
     // Mapeo centralizado para no repetir en cada action
     private static UserDto ToDto(Domain.User.User u) =>
-        new(u.Id, u.TenantId, u.Email, u.Name, u.Role, u.IsActive, u.CreatedAt, u.UpdatedAt);
+        new(u.Id, u.TenantId, u.Email, u.Name, u.Role, u.IsActive, u.CreatedAt, u.UpdatedAt, null!);
 }
