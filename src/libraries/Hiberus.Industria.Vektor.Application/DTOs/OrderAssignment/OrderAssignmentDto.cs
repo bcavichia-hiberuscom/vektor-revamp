@@ -22,9 +22,9 @@ public record OrderAssignmentDto(
     string? FailureReason,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
-    OrderSummaryDto Order,
-    VehicleSummaryDto Vehicle,
-    TenantSummaryDto Tenant
+    OrderSummaryDto? Order,
+    VehicleSummaryDto? Vehicle,
+    TenantSummaryDto? Tenant
 );
 
 public record CreateOrderAssignmentDto(Guid OrderId, Guid VehicleId);
