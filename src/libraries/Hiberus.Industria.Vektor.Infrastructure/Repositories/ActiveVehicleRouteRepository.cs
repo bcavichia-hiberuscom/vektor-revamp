@@ -1,3 +1,4 @@
+using Hiberus.Industria.Vektor.Application.Common.Pagination;
 using Hiberus.Industria.Vektor.Application.Interfaces;
 using Hiberus.Industria.Vektor.Domain.ActiveVehicleRoute;
 using Hiberus.Industria.Vektor.Domain.RouteHistory;
@@ -15,29 +16,85 @@ public class ActiveVehicleRouteRepository : IActiveVehicleRouteRepository
         _context = context;
     }
 
+    /// <summary>
+    /// Retrieves active vehicle routes with pagination, eager-loading related Vehicle and Tenant.
+    /// Uses AsNoTracking() for read-only queries to improve performance.
+    /// </summary>
+    public async Task<(IEnumerable<ActiveVehicleRoute> Items, int TotalCount)> GetAllPaginatedAsync(
+        Guid tenantId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    )
+    {
+        var paginationParams = new PaginationParams(pageNumber, pageSize);
+
+        // Get total count without loading data
+        var totalCount = await _context
+            .ActiveVehicleRoutes.AsNoTracking()
+            .Where(r => r.TenantId == tenantId)
+            .CountAsync(ct);
+
+        // Get paginated data with eager-loaded relations
+        var items = await _context
+            .ActiveVehicleRoutes.AsNoTracking()
+            .Where(r => r.TenantId == tenantId)
+            .Include(r => r.Vehicle)
+            .Include(r => r.Tenant)
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip(paginationParams.GetSkip())
+            .Take(paginationParams.PageSize)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
+    }
+
+    /// <summary>
+    /// Retrieves all active vehicle routes for a tenant with eager-loaded relations.
+    /// Use with caution - consider GetAllPaginatedAsync for large datasets.
+    /// </summary>
     public async Task<IEnumerable<ActiveVehicleRoute>> GetAllAsync(
         Guid tenantId,
         CancellationToken ct = default
-    ) => await _context.ActiveVehicleRoutes.Where(r => r.TenantId == tenantId).ToListAsync(ct);
+    ) =>
+        await _context
+            .ActiveVehicleRoutes.AsNoTracking()
+            .Where(r => r.TenantId == tenantId)
+            .Include(r => r.Vehicle)
+            .Include(r => r.Tenant)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync(ct);
 
+    /// <summary>
+    /// Retrieves active routes for a specific vehicle with eager-loaded relations.
+    /// </summary>
     public async Task<IEnumerable<ActiveVehicleRoute>> GetByVehicleAsync(
         Guid vehicleId,
         Guid tenantId,
         CancellationToken ct = default
     ) =>
         await _context
-            .ActiveVehicleRoutes.Where(r => r.VehicleId == vehicleId && r.TenantId == tenantId)
+            .ActiveVehicleRoutes.AsNoTracking()
+            .Where(r => r.VehicleId == vehicleId && r.TenantId == tenantId)
+            .Include(r => r.Vehicle)
+            .Include(r => r.Tenant)
+            .OrderByDescending(r => r.CreatedAt)
             .ToListAsync(ct);
 
+    /// <summary>
+    /// Retrieves a single active vehicle route by ID with eager-loaded relations.
+    /// </summary>
     public async Task<ActiveVehicleRoute?> GetByIdAsync(
         Guid id,
         Guid tenantId,
         CancellationToken ct = default
     ) =>
-        await _context.ActiveVehicleRoutes.FirstOrDefaultAsync(
-            r => r.Id == id && r.TenantId == tenantId,
-            ct
-        );
+        await _context
+            .ActiveVehicleRoutes.AsNoTracking()
+            .Where(r => r.Id == id && r.TenantId == tenantId)
+            .Include(r => r.Vehicle)
+            .Include(r => r.Tenant)
+            .FirstOrDefaultAsync(ct);
 
     public async Task<ActiveVehicleRoute> CreateAsync(
         ActiveVehicleRoute route,
@@ -71,12 +128,44 @@ public class RouteHistoryRepository : IRouteHistoryRepository
         _context = context;
     }
 
+    /// <summary>
+    /// Retrieves route histories with pagination for a tenant.
+    /// Uses AsNoTracking() for read-only queries to improve performance.
+    /// </summary>
+    public async Task<(IEnumerable<RouteHistory> Items, int TotalCount)> GetAllPaginatedAsync(
+        Guid tenantId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    )
+    {
+        var paginationParams = new PaginationParams(pageNumber, pageSize);
+
+        // Get total count without loading data
+        var totalCount = await _context.RouteHistories
+            .AsNoTracking()
+            .Where(h => h.TenantId == tenantId)
+            .CountAsync(ct);
+
+        // Get paginated data with eager-loaded relations
+        var items = await _context.RouteHistories
+            .AsNoTracking()
+            .Where(h => h.TenantId == tenantId)
+            .OrderByDescending(h => h.FinishedAt)
+            .Skip(paginationParams.GetSkip())
+            .Take(paginationParams.PageSize)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
+    }
+
     public async Task<IEnumerable<RouteHistory>> GetByTenantAsync(
         Guid tenantId,
         CancellationToken ct = default
     ) =>
         await _context
-            .RouteHistories.Where(h => h.TenantId == tenantId)
+            .RouteHistories.AsNoTracking()
+            .Where(h => h.TenantId == tenantId)
             .OrderByDescending(h => h.FinishedAt)
             .ToListAsync(ct);
 
@@ -86,7 +175,8 @@ public class RouteHistoryRepository : IRouteHistoryRepository
         CancellationToken ct = default
     ) =>
         await _context
-            .RouteHistories.Where(h => h.VehicleId == vehicleId && h.TenantId == tenantId)
+            .RouteHistories.AsNoTracking()
+            .Where(h => h.VehicleId == vehicleId && h.TenantId == tenantId)
             .OrderByDescending(h => h.FinishedAt)
             .ToListAsync(ct);
 
@@ -95,10 +185,11 @@ public class RouteHistoryRepository : IRouteHistoryRepository
         Guid tenantId,
         CancellationToken ct = default
     ) =>
-        await _context.RouteHistories.FirstOrDefaultAsync(
-            h => h.Id == id && h.TenantId == tenantId,
-            ct
-        );
+        await _context.RouteHistories.AsNoTracking()
+            .FirstOrDefaultAsync(
+                h => h.Id == id && h.TenantId == tenantId,
+                ct
+            );
 
     public async Task<RouteHistory> CreateAsync(
         RouteHistory history,
