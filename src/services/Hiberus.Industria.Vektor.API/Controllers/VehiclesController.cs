@@ -1,4 +1,4 @@
-using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Application.DTOs.Vehicle;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hiberus.Industria.Vektor.API.Controllers;
@@ -15,22 +15,15 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] Guid tenantId, CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid tenantId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default
+    )
     {
-        var vehicles = await _service.GetAll(tenantId, ct);
-
-        return Ok(
-            vehicles.Select(v => new VehicleDto(
-                v.Id,
-                v.Label,
-                v.LicensePlate,
-                v.Brand,
-                v.Model,
-                v.Year,
-                v.Type,
-                v.Status
-            ))
-        );
+        var result = await _service.GetAllPaginatedAsync(tenantId, pageNumber, pageSize, ct);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
@@ -40,23 +33,12 @@ public class VehiclesController : ControllerBase
         CancellationToken ct
     )
     {
-        var vehicle = await _service.GetById(id, tenantId, ct);
+        var vehicle = await _service.GetByIdAsDto(id, tenantId, ct);
 
         if (vehicle is null)
             return NotFound();
 
-        return Ok(
-            new VehicleDto(
-                vehicle.Id,
-                vehicle.Label,
-                vehicle.LicensePlate,
-                vehicle.Brand,
-                vehicle.Model,
-                vehicle.Year,
-                vehicle.Type,
-                vehicle.Status
-            )
-        );
+        return Ok(vehicle);
     }
 
     [HttpPost]
@@ -72,20 +54,12 @@ public class VehiclesController : ControllerBase
             return BadRequest(result.Errors);
 
         var v = result.Value;
-
+        var vehicleDto = await _service.GetByIdAsDto(v.Id, tenantId, ct);
+        
         return CreatedAtAction(
             nameof(GetById),
             new { id = v.Id, tenantId },
-            new VehicleDto(
-                v.Id,
-                v.Label,
-                v.LicensePlate,
-                v.Brand,
-                v.Model,
-                v.Year,
-                v.Type,
-                v.Status
-            )
+            vehicleDto
         );
     }
 
@@ -103,19 +77,9 @@ public class VehiclesController : ControllerBase
             return BadRequest(result.Errors);
 
         var v = result.Value;
-
-        return Ok(
-            new VehicleDto(
-                v.Id,
-                v.Label,
-                v.LicensePlate,
-                v.Brand,
-                v.Model,
-                v.Year,
-                v.Type,
-                v.Status
-            )
-        );
+        var vehicleDto = await _service.GetByIdAsDto(v.Id, tenantId, ct);
+        
+        return Ok(vehicleDto);
     }
 
     [HttpDelete("{id}")]
