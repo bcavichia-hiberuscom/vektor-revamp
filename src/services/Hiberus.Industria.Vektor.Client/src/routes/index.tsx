@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import VektorMap from "@/components/Map/VektorMap";
 
 export const Route = createFileRoute("/")({
-  component: () => (
-    <h1 className="text-2xl font-bold">Vektor Fleet Management</h1>
-  ),
+  component: HomePage,
 });
+
+function HomePage() {
+  return (
+    <div style={{ height: "100vh", width: "100vw" }}>
+      <VektorMap />
+    </div>
+  );
+}
