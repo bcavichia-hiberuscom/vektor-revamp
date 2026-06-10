@@ -1,5 +1,5 @@
 using ErrorOr;
-using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Application.DTOs.OrderAssignment;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hiberus.Industria.Vektor.API.Controllers;
@@ -18,8 +18,8 @@ public class OrderAssignmentsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetByTenant([FromQuery] Guid tenantId, CancellationToken ct)
     {
-        var assignments = await _service.GetByTenant(tenantId, ct);
-        return Ok(assignments.Select(ToDto));
+        var assignments = await _service.GetByTenantAsDto(tenantId, ct);
+        return Ok(assignments);
     }
 
     [HttpGet("order/{orderId}")]
@@ -29,8 +29,8 @@ public class OrderAssignmentsController : ControllerBase
         CancellationToken ct
     )
     {
-        var assignments = await _service.GetByOrder(orderId, tenantId, ct);
-        return Ok(assignments.Select(ToDto));
+        var assignments = await _service.GetByOrderAsDto(orderId, tenantId, ct);
+        return Ok(assignments);
     }
 
     [HttpGet("vehicle/{vehicleId}")]
@@ -40,8 +40,8 @@ public class OrderAssignmentsController : ControllerBase
         CancellationToken ct
     )
     {
-        var assignments = await _service.GetByVehicle(vehicleId, tenantId, ct);
-        return Ok(assignments.Select(ToDto));
+        var assignments = await _service.GetByVehicleAsDto(vehicleId, tenantId, ct);
+        return Ok(assignments);
     }
 
     [HttpGet("{id}")]
@@ -51,12 +51,12 @@ public class OrderAssignmentsController : ControllerBase
         CancellationToken ct
     )
     {
-        var assignment = await _service.GetById(id, tenantId, ct);
+        var assignment = await _service.GetByIdAsDto(id, tenantId, ct);
 
         if (assignment is null)
             return NotFound();
 
-        return Ok(ToDto(assignment));
+        return Ok(assignment);
     }
 
     [HttpPost]
@@ -72,7 +72,9 @@ public class OrderAssignmentsController : ControllerBase
             return BadRequest(result.Errors);
 
         var a = result.Value;
-        return CreatedAtAction(nameof(GetById), new { id = a.Id, tenantId }, ToDto(a));
+        var assignmentDto = await _service.GetByIdAsDto(a.Id, tenantId, ct);
+
+        return CreatedAtAction(nameof(GetById), new { id = a.Id, tenantId }, assignmentDto);
     }
 
     [HttpPost("{id}/start")]
@@ -85,7 +87,9 @@ public class OrderAssignmentsController : ControllerBase
                 ? NotFound()
                 : BadRequest(result.Errors);
 
-        return Ok(ToDto(result.Value));
+        var assignmentDto = await _service.GetByIdAsDto(result.Value.Id, tenantId, ct);
+
+        return Ok(assignmentDto);
     }
 
     [HttpPost("{id}/complete")]
@@ -103,7 +107,9 @@ public class OrderAssignmentsController : ControllerBase
                 ? NotFound()
                 : BadRequest(result.Errors);
 
-        return Ok(ToDto(result.Value));
+        var assignmentDto = await _service.GetByIdAsDto(result.Value.Id, tenantId, ct);
+
+        return Ok(assignmentDto);
     }
 
     [HttpPost("{id}/fail")]
@@ -121,22 +127,8 @@ public class OrderAssignmentsController : ControllerBase
                 ? NotFound()
                 : BadRequest(result.Errors);
 
-        return Ok(ToDto(result.Value));
-    }
+        var assignmentDto = await _service.GetByIdAsDto(result.Value.Id, tenantId, ct);
 
-    private static OrderAssignmentDto ToDto(Domain.OrderAssignment.OrderAssignment a) =>
-        new(
-            a.Id,
-            a.TenantId,
-            a.OrderId,
-            a.VehicleId,
-            a.Status,
-            a.AssignedAt,
-            a.StartedAt,
-            a.CompletedAt,
-            a.ActualArrival,
-            a.FailureReason,
-            a.CreatedAt,
-            a.UpdatedAt
-        );
+        return Ok(assignmentDto);
+    }
 }
