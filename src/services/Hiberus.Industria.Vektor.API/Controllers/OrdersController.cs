@@ -1,5 +1,6 @@
 using ErrorOr;
-using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Application.Common.Pagination;
+using Hiberus.Industria.Vektor.Application.DTOs.Order;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hiberus.Industria.Vektor.API.Controllers;
@@ -16,42 +17,36 @@ public class OrdersController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves all orders for a tenant.
+    /// Retrieves all orders for a tenant with pagination and nested relations.
     /// </summary>
     /// <param name="tenantId">The tenant ID.</param>
+    /// <param name="pageNumber">The page number (default 1).</param>
+    /// <param name="pageSize">The page size (default 20, max 100).</param>
     /// <param name="ct">The cancellation token.</param>
-    /// <returns>A list of orders.</returns>
-    /// <response code="200">Returns the list of orders.</response>
+    /// <returns>A paginated list of orders with nested tenant and assignments.</returns>
+    /// <response code="200">Returns the paginated list of orders.</response>
     /// <response code="500">An unexpected server error occurred.</response>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<OrderDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<OrderDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll([FromQuery] Guid tenantId, CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid tenantId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default
+    )
     {
-        var orders = await _service.GetAll(tenantId, ct);
-        var response = orders.Select(o => new OrderDto(
-            o.Id,
-            o.TenantId,
-            o.Label,
-            o.Description,
-            o.Latitude,
-            o.Longitude,
-            o.CustomerName,
-            o.CustomerPhone,
-            o.ExternalOrderId,
-            o.Status.ToString()
-        ));
-
-        return Ok(response);
+        var result = await _service.GetAllPaginatedAsync(tenantId, pageNumber, pageSize, ct);
+        return Ok(result);
     }
 
     /// <summary>
-    /// Retrieves an order by its ID.
+    /// Retrieves an order by its ID with nested relations.
     /// </summary>
     /// <param name="id">The ID of the order to retrieve.</param>
     /// <param name="tenantId">The tenant ID.</param>
     /// <param name="ct">The cancellation token.</param>
-    /// <returns>The order details.</returns>
+    /// <returns>The order details with nested tenant and assignments.</returns>
     /// <response code="200">Returns the order.</response>
     /// <response code="404">Order with the specified ID was not found.</response>
     /// <response code="500">An unexpected server error occurred.</response>
@@ -65,24 +60,11 @@ public class OrdersController : ControllerBase
         CancellationToken ct
     )
     {
-        var order = await _service.GetById(id, tenantId, ct);
+        var order = await _service.GetByIdAsDto(id, tenantId, ct);
         if (order is null)
             return NotFound();
 
-        return Ok(
-            new OrderDto(
-                order.Id,
-                order.TenantId,
-                order.Label,
-                order.Description,
-                order.Latitude,
-                order.Longitude,
-                order.CustomerName,
-                order.CustomerPhone,
-                order.ExternalOrderId,
-                order.Status.ToString()
-            )
-        );
+        return Ok(order);
     }
 
     /// <summary>
@@ -111,21 +93,12 @@ public class OrdersController : ControllerBase
             return BadRequest(result.Errors);
 
         var order = result.Value;
+        var orderDto = await _service.GetByIdAsDto(order.Id, tenantId, ct);
+        
         return CreatedAtAction(
             nameof(GetById),
             new { id = order.Id, tenantId },
-            new OrderDto(
-                order.Id,
-                order.TenantId,
-                order.Label,
-                order.Description,
-                order.Latitude,
-                order.Longitude,
-                order.CustomerName,
-                order.CustomerPhone,
-                order.ExternalOrderId,
-                order.Status.ToString()
-            )
+            orderDto
         );
     }
 
@@ -161,20 +134,9 @@ public class OrdersController : ControllerBase
                 : BadRequest(result.Errors);
 
         var order = result.Value;
-        return Ok(
-            new OrderDto(
-                order.Id,
-                order.TenantId,
-                order.Label,
-                order.Description,
-                order.Latitude,
-                order.Longitude,
-                order.CustomerName,
-                order.CustomerPhone,
-                order.ExternalOrderId,
-                order.Status.ToString()
-            )
-        );
+        var orderDto = await _service.GetByIdAsDto(order.Id, tenantId, ct);
+        
+        return Ok(orderDto);
     }
 
     /// <summary>
@@ -207,20 +169,9 @@ public class OrdersController : ControllerBase
                 : Conflict(result.Errors);
 
         var order = result.Value;
-        return Ok(
-            new OrderDto(
-                order.Id,
-                order.TenantId,
-                order.Label,
-                order.Description,
-                order.Latitude,
-                order.Longitude,
-                order.CustomerName,
-                order.CustomerPhone,
-                order.ExternalOrderId,
-                order.Status.ToString()
-            )
-        );
+        var orderDto = await _service.GetByIdAsDto(order.Id, tenantId, ct);
+        
+        return Ok(orderDto);
     }
 
     /// <summary>
