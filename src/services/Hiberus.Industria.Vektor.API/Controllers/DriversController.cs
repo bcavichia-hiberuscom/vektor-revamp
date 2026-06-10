@@ -1,5 +1,6 @@
 using ErrorOr;
-using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Application.Common.Pagination;
+using Hiberus.Industria.Vektor.Application.DTOs.Driver;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hiberus.Industria.Vektor.API.Controllers;
@@ -16,44 +17,36 @@ public class DriversController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves all drivers for a tenant.
+    /// Retrieves all drivers for a tenant with pagination and nested relations.
     /// </summary>
     /// <param name="tenantId">The tenant ID.</param>
+    /// <param name="pageNumber">The page number (default 1).</param>
+    /// <param name="pageSize">The page size (default 20, max 100).</param>
     /// <param name="ct">The cancellation token.</param>
-    /// <returns>A list of drivers.</returns>
-    /// <response code="200">Returns the list of drivers.</response>
+    /// <returns>A paginated list of drivers with nested tenant and assignments.</returns>
+    /// <response code="200">Returns the paginated list of drivers.</response>
     /// <response code="500">An unexpected server error occurred.</response>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<DriverDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<DriverDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll([FromQuery] Guid tenantId, CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid tenantId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default
+    )
     {
-        var drivers = await _service.GetAll(tenantId, ct);
-        var response = drivers.Select(d => new DriverDto(
-            d.Id,
-            d.TenantId,
-            d.Name,
-            d.PhoneNumber,
-            d.LicenseType,
-            d.LicenseNumber,
-            d.LicenseExpiryDate,
-            d.IsAvailable,
-            d.ImageUrl,
-            d.WorkdayStartTime,
-            d.WorkdayEndTime,
-            d.Timezone
-        ));
-
-        return Ok(response);
+        var result = await _service.GetAllPaginatedAsync(tenantId, pageNumber, pageSize, ct);
+        return Ok(result);
     }
 
     /// <summary>
-    /// Retrieves a driver by its ID.
+    /// Retrieves a driver by its ID with nested relations.
     /// </summary>
     /// <param name="id">The ID of the driver to retrieve.</param>
     /// <param name="tenantId">The tenant ID.</param>
     /// <param name="ct">The cancellation token.</param>
-    /// <returns>The driver details.</returns>
+    /// <returns>The driver details with nested tenant and assignments.</returns>
     /// <response code="200">Returns the driver.</response>
     /// <response code="404">Driver with the specified ID was not found.</response>
     /// <response code="500">An unexpected server error occurred.</response>
@@ -67,26 +60,11 @@ public class DriversController : ControllerBase
         CancellationToken ct
     )
     {
-        var driver = await _service.GetById(id, tenantId, ct);
+        var driver = await _service.GetByIdAsDto(id, tenantId, ct);
         if (driver is null)
             return NotFound();
 
-        return Ok(
-            new DriverDto(
-                driver.Id,
-                driver.TenantId,
-                driver.Name,
-                driver.PhoneNumber,
-                driver.LicenseType,
-                driver.LicenseNumber,
-                driver.LicenseExpiryDate,
-                driver.IsAvailable,
-                driver.ImageUrl,
-                driver.WorkdayStartTime,
-                driver.WorkdayEndTime,
-                driver.Timezone
-            )
-        );
+        return Ok(driver);
     }
 
     /// <summary>
@@ -115,24 +93,9 @@ public class DriversController : ControllerBase
             return BadRequest(result.Errors);
 
         var driver = result.Value;
-        return CreatedAtAction(
-            nameof(GetById),
-            new { id = driver.Id, tenantId },
-            new DriverDto(
-                driver.Id,
-                driver.TenantId,
-                driver.Name,
-                driver.PhoneNumber,
-                driver.LicenseType,
-                driver.LicenseNumber,
-                driver.LicenseExpiryDate,
-                driver.IsAvailable,
-                driver.ImageUrl,
-                driver.WorkdayStartTime,
-                driver.WorkdayEndTime,
-                driver.Timezone
-            )
-        );
+        var driverDto = await _service.GetByIdAsDto(driver.Id, tenantId, ct);
+
+        return CreatedAtAction(nameof(GetById), new { id = driver.Id, tenantId }, driverDto);
     }
 
     /// <summary>
@@ -167,22 +130,9 @@ public class DriversController : ControllerBase
                 : BadRequest(result.Errors);
 
         var driver = result.Value;
-        return Ok(
-            new DriverDto(
-                driver.Id,
-                driver.TenantId,
-                driver.Name,
-                driver.PhoneNumber,
-                driver.LicenseType,
-                driver.LicenseNumber,
-                driver.LicenseExpiryDate,
-                driver.IsAvailable,
-                driver.ImageUrl,
-                driver.WorkdayStartTime,
-                driver.WorkdayEndTime,
-                driver.Timezone
-            )
-        );
+        var driverDto = await _service.GetByIdAsDto(driver.Id, tenantId, ct);
+
+        return Ok(driverDto);
     }
 
     /// <summary>
