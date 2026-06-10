@@ -1,7 +1,13 @@
+using Hiberus.Industria.Vektor.Application.DTOs.DriverVehicleAssignment;
+using Hiberus.Industria.Vektor.Application.DTOs.Tenant;
 using Hiberus.Industria.Vektor.Domain.Driver;
 
-namespace Hiberus.Industria.Vektor.Application.DTOs;
+namespace Hiberus.Industria.Vektor.Application.DTOs.Driver;
 
+/// <summary>
+/// Complete driver information with nested tenant and vehicle assignments.
+/// Includes 1-level nesting to avoid circular references.
+/// </summary>
 public record DriverDto(
     Guid Id,
     Guid TenantId,
@@ -14,7 +20,9 @@ public record DriverDto(
     string? ImageUrl,
     int? WorkdayStartTime,
     int? WorkdayEndTime,
-    string Timezone
+    string Timezone,
+    TenantSummaryDto Tenant,
+    IReadOnlyCollection<DriverVehicleAssignmentDto> VehicleAssignments
 );
 
 public record CreateDriverDto(

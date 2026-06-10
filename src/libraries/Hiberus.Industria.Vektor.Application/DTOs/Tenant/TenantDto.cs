@@ -1,4 +1,4 @@
-namespace Hiberus.Industria.Vektor.Application.DTOs;
+namespace Hiberus.Industria.Vektor.Application.DTOs.Tenant;
 
 public record TenantDto(
     Guid Id,
