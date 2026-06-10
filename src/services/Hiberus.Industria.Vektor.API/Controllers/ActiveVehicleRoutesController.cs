@@ -1,5 +1,5 @@
 using ErrorOr;
-using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Application.DTOs.Route;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hiberus.Industria.Vektor.API.Controllers;
@@ -18,8 +18,8 @@ public class ActiveVehicleRoutesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] Guid tenantId, CancellationToken ct)
     {
-        var routes = await _service.GetAll(tenantId, ct);
-        return Ok(routes.Select(ToDto));
+        var routes = await _service.GetAllAsDto(tenantId, ct);
+        return Ok(routes);
     }
 
     [HttpGet("vehicle/{vehicleId}")]
@@ -29,8 +29,8 @@ public class ActiveVehicleRoutesController : ControllerBase
         CancellationToken ct
     )
     {
-        var routes = await _service.GetByVehicle(vehicleId, tenantId, ct);
-        return Ok(routes.Select(ToDto));
+        var routes = await _service.GetByVehicleAsDto(vehicleId, tenantId, ct);
+        return Ok(routes);
     }
 
     [HttpGet("{id}")]
@@ -40,12 +40,12 @@ public class ActiveVehicleRoutesController : ControllerBase
         CancellationToken ct
     )
     {
-        var route = await _service.GetById(id, tenantId, ct);
+        var route = await _service.GetByIdAsDto(id, tenantId, ct);
 
         if (route is null)
             return NotFound();
 
-        return Ok(ToDto(route));
+        return Ok(route);
     }
 
     [HttpPost]
@@ -61,7 +61,9 @@ public class ActiveVehicleRoutesController : ControllerBase
             return BadRequest(result.Errors);
 
         var r = result.Value;
-        return CreatedAtAction(nameof(GetById), new { id = r.Id, tenantId }, ToDto(r));
+        var routeDto = await _service.GetByIdAsDto(r.Id, tenantId, ct);
+        
+        return CreatedAtAction(nameof(GetById), new { id = r.Id, tenantId }, routeDto);
     }
 
     [HttpPut("{id}")]
@@ -77,7 +79,9 @@ public class ActiveVehicleRoutesController : ControllerBase
         if (result.IsError)
             return BadRequest(result.Errors);
 
-        return Ok(ToDto(result.Value));
+        var routeDto = await _service.GetByIdAsDto(result.Value.Id, tenantId, ct);
+        
+        return Ok(routeDto);
     }
 
     // POST /api/active-vehicle-routes/{id}/complete
@@ -97,28 +101,9 @@ public class ActiveVehicleRoutesController : ControllerBase
                 : BadRequest(result.Errors);
 
         var h = result.Value;
-        return Ok(
-            new RouteHistoryDto(
-                h.Id,
-                h.TenantId,
-                h.VehicleId,
-                h.RoutePayload,
-                h.AssociatedOrderIds,
-                h.StartedAt,
-                h.FinishedAt,
-                h.FinishedAt - h.StartedAt
-            )
-        );
+        var historyDto = await _service.GetHistoryByIdAsDto(h.Id, tenantId, ct);
+        
+        return Ok(historyDto);
     }
 
-    private static ActiveVehicleRouteDto ToDto(Domain.ActiveVehicleRoute.ActiveVehicleRoute r) =>
-        new(
-            r.Id,
-            r.TenantId,
-            r.VehicleId,
-            r.RoutePayload,
-            r.AssociatedOrderIds,
-            r.StartedAt,
-            r.CreatedAt
-        );
 }
