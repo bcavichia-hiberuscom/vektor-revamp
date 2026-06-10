@@ -1,9 +1,30 @@
+using Hiberus.Industria.Vektor.Application.DTOs.User;
 using Hiberus.Industria.Vektor.Domain.User;
 
 namespace Hiberus.Industria.Vektor.Application.Interfaces;
 
 public interface IUserRepository
 {
+    // ==================== DTO Methods (Optimized Query Projections) ====================
+
+    /// <summary>
+    /// Retrieves users as DTOs with pagination, with database-level projections.
+    /// All nested relations are projected at the database level for optimal performance.
+    /// </summary>
+    Task<(IEnumerable<UserDto> Items, int TotalCount)> GetAllPaginatedAsDtoAsync(
+        Guid tenantId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    );
+
+    /// <summary>
+    /// Retrieves a single user as DTO by ID with database-level projections.
+    /// </summary>
+    Task<UserDto?> GetByIdAsDtoAsync(Guid id, Guid tenantId, CancellationToken ct = default);
+
+    // ==================== Entity Methods (For CRUD Operations) ====================
+
     /// <summary>
     /// Retrieves all users for a given tenant with pagination support.
     /// </summary>

@@ -1,3 +1,4 @@
+using Hiberus.Industria.Vektor.Application.DTOs.DriverVehicleAssignment;
 using Hiberus.Industria.Vektor.Domain.DriverVehicleAssignment;
 
 namespace Hiberus.Industria.Vektor.Application.Interfaces;
@@ -14,6 +15,24 @@ public interface IDriverVehicleAssignmentRepository
         int pageSize,
         CancellationToken ct = default
     );
+
+    /// <summary>
+    /// Retrieves all driver-vehicle assignments for a given tenant as DTOs with pagination support.
+    /// Uses database-level projection to minimize data transfer.
+    /// </summary>
+    /// <returns>Tuple containing the collection of DriverVehicleAssignmentDto and total count.</returns>
+    Task<(IEnumerable<DriverVehicleAssignmentDto> Items, int TotalCount)> GetAllPaginatedAsDtoAsync(
+        Guid tenantId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    );
+
+    /// <summary>
+    /// Retrieves a single driver-vehicle assignment by ID as DTO with eager-loaded relations.
+    /// Uses database-level projection for optimal performance.
+    /// </summary>
+    Task<DriverVehicleAssignmentDto?> GetByIdAsDtoAsync(Guid id, Guid tenantId, CancellationToken ct = default);
 
     Task<IEnumerable<DriverVehicleAssignment>> GetByTenantAsync(
         Guid tenantId,

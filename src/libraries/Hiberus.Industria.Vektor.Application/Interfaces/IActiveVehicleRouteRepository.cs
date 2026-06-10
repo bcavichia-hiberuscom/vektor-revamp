@@ -1,3 +1,4 @@
+using Hiberus.Industria.Vektor.Application.DTOs.Route;
 using Hiberus.Industria.Vektor.Domain.ActiveVehicleRoute;
 using Hiberus.Industria.Vektor.Domain.RouteHistory;
 
@@ -13,6 +14,28 @@ public interface IActiveVehicleRouteRepository
         Guid tenantId,
         int pageNumber,
         int pageSize,
+        CancellationToken ct = default
+    );
+
+    /// <summary>
+    /// Retrieves all active vehicle routes for a given tenant as DTOs with pagination support.
+    /// Uses database-level projection to minimize data transfer.
+    /// </summary>
+    /// <returns>Tuple containing the collection of ActiveVehicleRouteDto and total count.</returns>
+    Task<(IEnumerable<ActiveVehicleRouteDto> Items, int TotalCount)> GetAllPaginatedAsDtoAsync(
+        Guid tenantId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    );
+
+    /// <summary>
+    /// Retrieves a single active vehicle route by ID as DTO with eager-loaded relations.
+    /// Uses database-level projection for optimal performance.
+    /// </summary>
+    Task<ActiveVehicleRouteDto?> GetByIdAsDtoAsync(
+        Guid id,
+        Guid tenantId,
         CancellationToken ct = default
     );
 
@@ -41,6 +64,28 @@ public interface IRouteHistoryRepository
         Guid tenantId,
         int pageNumber,
         int pageSize,
+        CancellationToken ct = default
+    );
+
+    /// <summary>
+    /// Retrieves all route history records for a given tenant as DTOs with pagination support.
+    /// Uses database-level projection to minimize data transfer.
+    /// </summary>
+    /// <returns>Tuple containing the collection of RouteHistoryDto and total count.</returns>
+    Task<(IEnumerable<RouteHistoryDto> Items, int TotalCount)> GetAllPaginatedAsDtoAsync(
+        Guid tenantId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default
+    );
+
+    /// <summary>
+    /// Retrieves a single route history record by ID as DTO with eager-loaded relations.
+    /// Uses database-level projection for optimal performance.
+    /// </summary>
+    Task<RouteHistoryDto?> GetByIdAsDtoAsync(
+        Guid id,
+        Guid tenantId,
         CancellationToken ct = default
     );
 
