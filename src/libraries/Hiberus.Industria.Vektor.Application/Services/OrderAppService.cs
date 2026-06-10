@@ -1,10 +1,6 @@
 using ErrorOr;
-using Hiberus.Industria.Vektor.Application.Common.Mappings;
 using Hiberus.Industria.Vektor.Application.Common.Pagination;
 using Hiberus.Industria.Vektor.Application.DTOs.Order;
-using Hiberus.Industria.Vektor.Application.DTOs.Tenant;
-using Hiberus.Industria.Vektor.Application.DTOs.OrderAssignment;
-using Hiberus.Industria.Vektor.Application.DTOs.Vehicle;
 using Hiberus.Industria.Vektor.Application.Interfaces;
 using Hiberus.Industria.Vektor.Domain.Order;
 
@@ -19,6 +15,7 @@ public class OrderAppService
 
     /// <summary>
     /// Retrieves orders with pagination, returning DTOs with nested relations.
+    /// Uses database-level projections to minimize data transfer and N+1 queries.
     /// Default: 20 items/page, maximum: 100 items/page.
     /// </summary>
     public async Task<PagedResult<OrderDto>> GetAllPaginatedAsync(
@@ -28,123 +25,55 @@ public class OrderAppService
         CancellationToken ct = default
     )
     {
-        var (orders, totalCount) = await _repo.GetAllPaginatedAsync(tenantId, pageNumber, pageSize, ct);
-        
-        // Project entities to DTOs with nested relations
-        var dtos = orders
-            .Select(o => new OrderDto(
-                o.Id,
-                o.TenantId,
-                o.Label,
-                o.Description,
-                o.Latitude,
-                o.Longitude,
-                o.CustomerName,
-                o.CustomerPhone,
-                o.ExternalOrderId,
-                o.Status.ToString(),
-                new TenantSummaryDto(o.Tenant.Id, o.Tenant.Name, o.Tenant.Slug),
-                o.Assignments
-                    .Select(a => new OrderAssignmentDto(
-                        a.Id,
-                        a.TenantId,
-                        a.OrderId,
-                        a.VehicleId,
-                        a.Status.ToString(),
-                        a.AssignedAt,
-                        a.StartedAt,
-                        a.CompletedAt,
-                        a.ActualArrival,
-                        a.FailureReason,
-                        a.CreatedAt,
-                        a.UpdatedAt,
-                        new OrderSummaryDto(a.Order.Id, a.Order.Label, a.Order.Status.ToString(), a.Order.CustomerName),
-                        new VehicleSummaryDto(
-                            a.Vehicle.Id,
-                            a.Vehicle.Label,
-                            a.Vehicle.LicensePlate ?? string.Empty,
-                            a.Vehicle.Brand ?? string.Empty,
-                            a.Vehicle.Model ?? string.Empty,
-                            a.Vehicle.Year ?? 0,
-                            a.Vehicle.Type,
-                            a.Vehicle.Status.ToString()
-                        ),
-                        new TenantSummaryDto(a.Tenant.Id, a.Tenant.Name, a.Tenant.Slug)
-                    ))
-                    .ToList()
-            ))
-            .ToList();
+        // Repository returns DTOs already projected at database level
+        var (dtos, totalCount) = await _repo.GetAllPaginatedAsDtoAsync(
+            tenantId,
+            pageNumber,
+            pageSize,
+            ct
+        );
 
-        return new PagedResult<OrderDto>(dtos, totalCount, pageNumber, pageSize);
+        // Convert IEnumerable to List (which implements IReadOnlyCollection)
+        return new PagedResult<OrderDto>(dtos.ToList(), totalCount, pageNumber, pageSize);
     }
 
     /// <summary>
     /// Retrieves a single order by ID as DTO with nested relations.
+    /// Uses database-level projection for optimal performance.
     /// </summary>
-    public async Task<OrderDto?> GetByIdAsDto(Guid id, Guid tenantId, CancellationToken ct)
-    {
-        var order = await _repo.GetByIdAsync(id, tenantId, ct);
-        if (order is null)
-            return null;
+    public async Task<OrderDto?> GetByIdAsDto(Guid id, Guid tenantId, CancellationToken ct) =>
+        await _repo.GetByIdAsDtoAsync(id, tenantId, ct);
 
-        return new OrderDto(
-            order.Id,
-            order.TenantId,
-            order.Label,
-            order.Description,
-            order.Latitude,
-            order.Longitude,
-            order.CustomerName,
-            order.CustomerPhone,
-            order.ExternalOrderId,
-            order.Status.ToString(),
-            new TenantSummaryDto(order.Tenant.Id, order.Tenant.Name, order.Tenant.Slug),
-            order.Assignments
-                .Select(a => new OrderAssignmentDto(
-                    a.Id,
-                    a.TenantId,
-                    a.OrderId,
-                    a.VehicleId,
-                    a.Status.ToString(),
-                    a.AssignedAt,
-                    a.StartedAt,
-                    a.CompletedAt,
-                    a.ActualArrival,
-                    a.FailureReason,
-                    a.CreatedAt,
-                    a.UpdatedAt,
-                    new OrderSummaryDto(a.Order.Id, a.Order.Label, a.Order.Status.ToString(), a.Order.CustomerName),
-                    new VehicleSummaryDto(
-                        a.Vehicle.Id,
-                        a.Vehicle.Label,
-                        a.Vehicle.LicensePlate ?? string.Empty,
-                        a.Vehicle.Brand ?? string.Empty,
-                        a.Vehicle.Model ?? string.Empty,
-                        a.Vehicle.Year ?? 0,
-                        a.Vehicle.Type,
-                        a.Vehicle.Status.ToString()
-                    ),
-                    new TenantSummaryDto(a.Tenant.Id, a.Tenant.Name, a.Tenant.Slug)
-                ))
-                .ToList()
-        );
-    }
+    // ==================== CRUD Operations ====================
 
+    /// <summary>
+    /// Retrieves a single order entity by ID for CRUD operations.
+    /// Returns raw entity for mutation operations (Update, Delete).
+    /// For read-only scenarios with DTOs, use GetByIdAsDto() instead.
+    /// </summary>
     public async Task<Order?> GetById(Guid id, Guid tenantId, CancellationToken ct) =>
         await _repo.GetByIdAsync(id, tenantId, ct);
 
+    /// <summary>
+    /// Creates a new order with validation at the domain level.
+    /// Validates business rules before persisting to the database.
+    /// </summary>
+    /// <returns>
+    /// ErrorOr result containing the created order or domain validation errors.
+    /// </returns>
     public async Task<ErrorOr<Order>> Create(
         CreateOrderDto dto,
         Guid tenantId,
         CancellationToken ct
     )
     {
+        // Delegate to domain aggregate root for business logic validation
         var result = Order.Create(
             tenantId,
             dto.Label,
             dto.Latitude,
             dto.Longitude,
-            "system", // replace with user when auth is implemented
+            "system", // TODO: Replace with authenticated user when auth is implemented
             dto.ExternalOrderId,
             dto.Description,
             dto.CustomerName,
@@ -158,6 +87,13 @@ public class OrderAppService
         return order;
     }
 
+    /// <summary>
+    /// Updates an existing order with validation at the domain level.
+    /// Validates business rules and tenant isolation before persisting.
+    /// </summary>
+    /// <returns>
+    /// ErrorOr result containing the updated order, not-found error, or domain validation errors.
+    /// </returns>
     public async Task<ErrorOr<Order>> Update(
         Guid id,
         Guid tenantId,
@@ -165,15 +101,17 @@ public class OrderAppService
         CancellationToken ct
     )
     {
+        // Retrieve entity for mutation - uses raw entity repository method
         var order = await _repo.GetByIdAsync(id, tenantId, ct);
         if (order is null)
             return Error.NotFound();
 
+        // Delegate to domain aggregate root for business logic validation
         var result = order.Update(
             dto.Label,
             dto.Latitude,
             dto.Longitude,
-            "system", // replace with user when auth is implemented
+            "system", // TODO: Replace with authenticated user when auth is implemented
             dto.ExternalOrderId,
             dto.Description,
             dto.CustomerName,
@@ -187,13 +125,22 @@ public class OrderAppService
         return order;
     }
 
+    /// <summary>
+    /// Cancels an existing order by transitioning its status to Cancelled.
+    /// Only affects orders in valid states for cancellation.
+    /// </summary>
+    /// <returns>
+    /// ErrorOr result containing the cancelled order, not-found error, or domain validation errors.
+    /// </returns>
     public async Task<ErrorOr<Order>> Cancel(Guid id, Guid tenantId, CancellationToken ct)
     {
+        // Retrieve entity for mutation - uses raw entity repository method
         var order = await _repo.GetByIdAsync(id, tenantId, ct);
         if (order is null)
             return Error.NotFound();
 
-        var result = order.Cancel("system"); // replace with user when auth is implemented
+        // Delegate to domain aggregate root for business logic validation
+        var result = order.Cancel("system"); // TODO: Replace with authenticated user when auth is implemented
         if (result.IsError)
             return result.Errors;
 
@@ -201,6 +148,9 @@ public class OrderAppService
         return order;
     }
 
+    /// <summary>
+    /// Deletes an order from the database with tenant isolation validation.
+    /// </summary>
     public async Task Delete(Guid id, Guid tenantId, CancellationToken ct) =>
         await _repo.DeleteAsync(id, tenantId, ct);
 }

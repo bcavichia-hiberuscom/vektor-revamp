@@ -1,8 +1,8 @@
 using ErrorOr;
 using Hiberus.Industria.Vektor.Application.Common.Mappings;
 using Hiberus.Industria.Vektor.Application.DTOs.Route;
-using Hiberus.Industria.Vektor.Application.DTOs.Vehicle;
 using Hiberus.Industria.Vektor.Application.DTOs.Tenant;
+using Hiberus.Industria.Vektor.Application.DTOs.Vehicle;
 using Hiberus.Industria.Vektor.Application.Interfaces;
 using Hiberus.Industria.Vektor.Domain.ActiveVehicleRoute;
 using Hiberus.Industria.Vektor.Domain.RouteHistory;
@@ -30,7 +30,7 @@ public class ActiveVehicleRouteAppService
     )
     {
         var routes = await _routeRepo.GetAllAsync(tenantId, ct);
-        
+
         return routes
             .Select(r => new ActiveVehicleRouteDto(
                 r.Id,
@@ -65,7 +65,7 @@ public class ActiveVehicleRouteAppService
     )
     {
         var routes = await _routeRepo.GetByVehicleAsync(vehicleId, tenantId, ct);
-        
+
         return routes
             .Select(r => new ActiveVehicleRouteDto(
                 r.Id,
@@ -93,7 +93,11 @@ public class ActiveVehicleRouteAppService
     /// <summary>
     /// Retrieves a single active vehicle route by ID as DTO with nested relations.
     /// </summary>
-    public async Task<ActiveVehicleRouteDto?> GetByIdAsDto(Guid id, Guid tenantId, CancellationToken ct)
+    public async Task<ActiveVehicleRouteDto?> GetByIdAsDto(
+        Guid id,
+        Guid tenantId,
+        CancellationToken ct
+    )
     {
         var route = await _routeRepo.GetByIdAsync(id, tenantId, ct);
         if (route is null)
@@ -202,7 +206,11 @@ public class ActiveVehicleRouteAppService
     /// Retrieves a route history by ID as DTO with nested relations.
     /// Used after Complete() to return full RouteHistoryDto with all nested data.
     /// </summary>
-    public async Task<RouteHistoryDto?> GetHistoryByIdAsDto(Guid historyId, Guid tenantId, CancellationToken ct)
+    public async Task<RouteHistoryDto?> GetHistoryByIdAsDto(
+        Guid historyId,
+        Guid tenantId,
+        CancellationToken ct
+    )
     {
         var history = await _historyRepo.GetByIdAsync(historyId, tenantId, ct);
         if (history is null)
@@ -222,16 +230,12 @@ public class ActiveVehicleRouteAppService
                 history.Vehicle.Label,
                 history.Vehicle.LicensePlate ?? string.Empty,
                 history.Vehicle.Brand ?? string.Empty,
-                history.Vehicle.Model,
+                history.Vehicle.Model ?? string.Empty,
                 history.Vehicle.Year ?? 0,
                 history.Vehicle.Type,
                 history.Vehicle.Status.ToString()
             ),
-            new TenantSummaryDto(
-                history.Tenant.Id,
-                history.Tenant.Name,
-                history.Tenant.Slug
-            )
+            new TenantSummaryDto(history.Tenant.Id, history.Tenant.Name, history.Tenant.Slug)
         );
     }
 }

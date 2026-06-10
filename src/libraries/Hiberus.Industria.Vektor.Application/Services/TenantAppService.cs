@@ -1,5 +1,4 @@
 using ErrorOr;
-using Hiberus.Industria.Vektor.Application.Common.Mappings;
 using Hiberus.Industria.Vektor.Application.Common.Pagination;
 using Hiberus.Industria.Vektor.Application.DTOs.Tenant;
 using Hiberus.Industria.Vektor.Application.Interfaces;
@@ -16,6 +15,7 @@ public class TenantAppService
 
     /// <summary>
     /// Retrieves all tenants with pagination, returning DTOs.
+    /// Uses database-level projections to minimize data transfer.
     /// Default: 20 items/page, maximum: 100 items/page.
     /// </summary>
     public async Task<PagedResult<TenantDto>> GetAllPaginatedAsync(
@@ -24,47 +24,22 @@ public class TenantAppService
         CancellationToken ct = default
     )
     {
-        var paginationParams = new PaginationParams(pageNumber, pageSize);
+        // Repository returns DTOs already projected at database level
+        var (dtos, totalCount) = await _repo.GetAllPaginatedAsDtoAsync(
+            pageNumber,
+            pageSize,
+            ct
+        );
 
-        // Get total count without loading data
-        var totalCount = await Task.FromResult(0); // Will implement GetCountAsync if needed
-
-        // Get paginated data
-        var tenants = await _repo.GetAllAsync(ct);
-        var pagedTenants = tenants
-            .OrderByDescending(t => t.CreatedAt)
-            .Skip(paginationParams.GetSkip())
-            .Take(paginationParams.PageSize)
-            .ToList();
-
-        totalCount = (await _repo.GetAllAsync(ct)).Count();
-
-        // Project entities to DTOs
-        var dtos = pagedTenants
-            .Select(t => new TenantDto(t.Id, t.Name, t.Slug, t.IsActive, t.CreatedAt, t.UpdatedAt))
-            .ToList();
-
-        return new PagedResult<TenantDto>(dtos, totalCount, pageNumber, pageSize);
+        return new PagedResult<TenantDto>(dtos.ToList(), totalCount, pageNumber, pageSize);
     }
 
     /// <summary>
     /// Retrieves a single tenant by ID as DTO.
+    /// Uses database-level projection for optimal performance.
     /// </summary>
-    public async Task<TenantDto?> GetByIdAsDto(Guid id, CancellationToken ct)
-    {
-        var tenant = await _repo.GetByIdAsync(id, ct);
-        if (tenant is null)
-            return null;
-
-        return new TenantDto(
-            tenant.Id,
-            tenant.Name,
-            tenant.Slug,
-            tenant.IsActive,
-            tenant.CreatedAt,
-            tenant.UpdatedAt
-        );
-    }
+    public async Task<TenantDto?> GetByIdAsDto(Guid id, CancellationToken ct) =>
+        await _repo.GetByIdAsDtoAsync(id, ct);
 
     public async Task<Tenant?> GetById(Guid id, CancellationToken ct) =>
         await _repo.GetByIdAsync(id, ct);
