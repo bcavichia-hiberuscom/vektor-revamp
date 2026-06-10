@@ -27,8 +27,23 @@ public class VektorDbContext : DbContext
     public DbSet<ActiveVehicleRoute> ActiveVehicleRoutes => Set<ActiveVehicleRoute>();
     public DbSet<RouteHistory> RouteHistories => Set<RouteHistory>();
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+        // Note: Lazy loading is disabled at the model level in OnModelCreating
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Disable lazy loading at the model level
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var navigation in entityType.GetNavigations())
+            {
+                navigation.SetLazyLoadingEnabled(false);
+            }
+        }
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(VektorDbContext).Assembly);
     }
 }
