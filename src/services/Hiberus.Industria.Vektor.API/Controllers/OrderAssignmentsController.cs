@@ -16,10 +16,15 @@ public class OrderAssignmentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetByTenant([FromQuery] Guid tenantId, CancellationToken ct)
+    public async Task<IActionResult> GetByTenant(
+        [FromQuery] Guid tenantId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default
+    )
     {
-        var assignments = await _service.GetByTenantAsDto(tenantId, ct);
-        return Ok(assignments);
+        var result = await _service.GetAllPaginatedAsync(tenantId, pageNumber, pageSize, ct);
+        return Ok(result);
     }
 
     [HttpGet("order/{orderId}")]
@@ -29,8 +34,8 @@ public class OrderAssignmentsController : ControllerBase
         CancellationToken ct
     )
     {
-        var assignments = await _service.GetByOrderAsDto(orderId, tenantId, ct);
-        return Ok(assignments);
+        var dtos = await _service.GetByOrderAsDto(orderId, tenantId, ct);
+        return Ok(dtos);
     }
 
     [HttpGet("vehicle/{vehicleId}")]
@@ -40,8 +45,8 @@ public class OrderAssignmentsController : ControllerBase
         CancellationToken ct
     )
     {
-        var assignments = await _service.GetByVehicleAsDto(vehicleId, tenantId, ct);
-        return Ok(assignments);
+        var dtos = await _service.GetByVehicleAsDto(vehicleId, tenantId, ct);
+        return Ok(dtos);
     }
 
     [HttpGet("{id}")]

@@ -80,7 +80,4 @@ public class TenantsController : ControllerBase
 
         return NoContent();
     }
-
-    private static TenantDto ToDto(Domain.Tenant.Tenant t) =>
-        new(t.Id, t.Name, t.Slug, t.IsActive, t.CreatedAt, t.UpdatedAt);
 }

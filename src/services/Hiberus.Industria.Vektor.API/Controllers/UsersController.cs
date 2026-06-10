@@ -90,8 +90,4 @@ public class UsersController : ControllerBase
 
         return NoContent();
     }
-
-    // Mapeo centralizado para no repetir en cada action
-    private static UserDto ToDto(Domain.User.User u) =>
-        new(u.Id, u.TenantId, u.Email, u.Name, u.Role, u.IsActive, u.CreatedAt, u.UpdatedAt, null!);
 }
