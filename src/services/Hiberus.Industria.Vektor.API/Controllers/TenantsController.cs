@@ -1,5 +1,5 @@
 using ErrorOr;
-using Hiberus.Industria.Vektor.Application.DTOs;
+using Hiberus.Industria.Vektor.Application.DTOs.Tenant;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hiberus.Industria.Vektor.API.Controllers;
@@ -16,21 +16,25 @@ public class TenantsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default
+    )
     {
-        var tenants = await _service.GetAll(ct);
-        return Ok(tenants.Select(ToDto));
+        var result = await _service.GetAllPaginatedAsync(pageNumber, pageSize, ct);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
-        var tenant = await _service.GetById(id, ct);
+        var tenant = await _service.GetByIdAsDto(id, ct);
 
         if (tenant is null)
             return NotFound();
 
-        return Ok(ToDto(tenant));
+        return Ok(tenant);
     }
 
     [HttpPost]
@@ -42,7 +46,9 @@ public class TenantsController : ControllerBase
             return BadRequest(result.Errors);
 
         var t = result.Value;
-        return CreatedAtAction(nameof(GetById), new { id = t.Id }, ToDto(t));
+        var tenantDto = await _service.GetByIdAsDto(t.Id, ct);
+        
+        return CreatedAtAction(nameof(GetById), new { id = t.Id }, tenantDto);
     }
 
     [HttpPut("{id}")]
@@ -57,7 +63,9 @@ public class TenantsController : ControllerBase
         if (result.IsError)
             return BadRequest(result.Errors);
 
-        return Ok(ToDto(result.Value));
+        var tenantDto = await _service.GetByIdAsDto(result.Value.Id, ct);
+        
+        return Ok(tenantDto);
     }
 
     [HttpDelete("{id}")]
