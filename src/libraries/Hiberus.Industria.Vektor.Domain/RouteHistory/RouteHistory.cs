@@ -1,4 +1,5 @@
 using ErrorOr;
+using Hiberus.Industria.Vektor.Domain.Common;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.RouteHistory;
@@ -35,21 +36,26 @@ public sealed class RouteHistory : IAuditable
         string createdBy
     )
     {
-        if (tenantId == Guid.Empty)
-            return Error.Validation("RouteHistory.TenantId", "TenantId cannot be empty");
-        if (vehicleId == Guid.Empty)
-            return Error.Validation("RouteHistory.VehicleId", "VehicleId cannot be empty");
-        if (string.IsNullOrWhiteSpace(routePayload))
-            return Error.Validation("RouteHistory.RoutePayload", "RoutePayload is required");
+        var tenantIdResult = Guard.NotEmpty(tenantId, "RouteHistory.TenantId", "TenantId cannot be empty");
+        if (tenantIdResult.IsError)
+            return tenantIdResult.Errors;
+
+        var vehicleIdResult = Guard.NotEmpty(vehicleId, "RouteHistory.VehicleId", "VehicleId cannot be empty");
+        if (vehicleIdResult.IsError)
+            return vehicleIdResult.Errors;
+
+        var routePayloadResult = Guard.NotNullOrWhiteSpace(routePayload, "RouteHistory.RoutePayload", "RoutePayload is required");
+        if (routePayloadResult.IsError)
+            return routePayloadResult.Errors;
 
         var now = DateTime.UtcNow;
 
         return new RouteHistory
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            VehicleId = vehicleId,
-            RoutePayload = routePayload,
+            TenantId = tenantIdResult.Value,
+            VehicleId = vehicleIdResult.Value,
+            RoutePayload = routePayloadResult.Value,
             AssociatedOrderIds = associatedOrderIds,
             StartedAt = startedAt,
             FinishedAt = now,

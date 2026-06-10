@@ -1,4 +1,5 @@
 using ErrorOr;
+using Hiberus.Industria.Vektor.Domain.Common;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.Driver;
@@ -42,16 +43,23 @@ public sealed class Driver : IAuditable
         DateTime? licenseExpiryDate = null
     )
     {
-        if (tenantId == Guid.Empty)
-            return Error.Validation("Driver.TenantId", "TenantId cannot be empty");
-        if (string.IsNullOrWhiteSpace(name))
-            return Error.Validation("Driver.Name", "Name is required");
+        var tenantIdResult = Guard.NotEmpty(
+            tenantId,
+            "Driver.TenantId",
+            "TenantId cannot be empty"
+        );
+        if (tenantIdResult.IsError)
+            return tenantIdResult.Errors;
+
+        var nameResult = Guard.NotNullOrWhiteSpace(name, "Driver.Name", "Name is required");
+        if (nameResult.IsError)
+            return nameResult.Errors;
 
         return new Driver
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            Name = name.Trim(),
+            TenantId = tenantIdResult.Value,
+            Name = nameResult.Value,
             LicenseType = licenseType,
             PhoneNumber = phoneNumber?.Trim(),
             LicenseNumber = licenseNumber?.Trim(),
@@ -76,18 +84,25 @@ public sealed class Driver : IAuditable
         string updatedBy
     )
     {
-        if (string.IsNullOrWhiteSpace(name))
-            return Error.Validation("Driver.Name", "Name is required");
-        if (string.IsNullOrWhiteSpace(timezone))
-            return Error.Validation("Driver.Timezone", "Timezone is required");
+        var nameResult = Guard.NotNullOrWhiteSpace(name, "Driver.Name", "Name is required");
+        if (nameResult.IsError)
+            return nameResult.Errors;
 
-        Name = name.Trim();
+        var timezoneResult = Guard.NotNullOrWhiteSpace(
+            timezone,
+            "Driver.Timezone",
+            "Timezone is required"
+        );
+        if (timezoneResult.IsError)
+            return timezoneResult.Errors;
+
+        Name = nameResult.Value;
         PhoneNumber = phoneNumber?.Trim();
         LicenseType = licenseType;
         LicenseNumber = licenseNumber?.Trim();
         LicenseExpiryDate = licenseExpiryDate;
         IsAvailable = isAvailable;
-        Timezone = timezone;
+        Timezone = timezoneResult.Value;
         WorkdayStartTime = workdayStartTime;
         WorkdayEndTime = workdayEndTime;
         UpdatedAt = DateTime.UtcNow;

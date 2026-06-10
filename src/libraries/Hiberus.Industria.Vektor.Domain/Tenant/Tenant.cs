@@ -1,4 +1,5 @@
 using ErrorOr;
+using Hiberus.Industria.Vektor.Domain.Common;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.Tenant;
@@ -31,21 +32,30 @@ public sealed class Tenant : IAuditable
 
     public static ErrorOr<Tenant> Create(string name, string slug, string createdBy)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            return Error.Validation("Tenant.Name", "Name is required");
-        if (string.IsNullOrWhiteSpace(slug))
-            return Error.Validation("Tenant.Slug", "Slug is required");
-        if (string.IsNullOrWhiteSpace(createdBy))
-            return Error.Validation("Tenant.CreatedBy", "CreatedBy is required");
+        var nameResult = Guard.NotNullOrWhiteSpace(name, "Tenant.Name", "Name is required");
+        if (nameResult.IsError)
+            return nameResult.Errors;
+
+        var slugResult = Guard.NotNullOrWhiteSpace(slug, "Tenant.Slug", "Slug is required");
+        if (slugResult.IsError)
+            return slugResult.Errors;
+
+        var createdByResult = Guard.NotNullOrWhiteSpace(
+            createdBy,
+            "Tenant.CreatedBy",
+            "CreatedBy is required"
+        );
+        if (createdByResult.IsError)
+            return createdByResult.Errors;
 
         return new Tenant
         {
             Id = Guid.NewGuid(),
-            Name = name.Trim(),
-            Slug = slug.Trim().ToLowerInvariant(),
+            Name = nameResult.Value,
+            Slug = slugResult.Value.ToLowerInvariant(),
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            CreatedBy = createdBy,
+            CreatedBy = createdByResult.Value,
         };
     }
 
@@ -54,14 +64,22 @@ public sealed class Tenant : IAuditable
     {
         if (IsDeleted)
             return Error.Conflict("Tenant.Deleted", "Cannot update a deleted tenant");
-        if (string.IsNullOrWhiteSpace(name))
-            return Error.Validation("Tenant.Name", "Name is required");
-        if (string.IsNullOrWhiteSpace(updatedBy))
-            return Error.Validation("Tenant.UpdatedBy", "UpdatedBy is required");
 
-        Name = name.Trim();
+        var nameResult = Guard.NotNullOrWhiteSpace(name, "Tenant.Name", "Name is required");
+        if (nameResult.IsError)
+            return nameResult.Errors;
+
+        var updatedByResult = Guard.NotNullOrWhiteSpace(
+            updatedBy,
+            "Tenant.UpdatedBy",
+            "UpdatedBy is required"
+        );
+        if (updatedByResult.IsError)
+            return updatedByResult.Errors;
+
+        Name = nameResult.Value;
         UpdatedAt = DateTime.UtcNow;
-        UpdatedBy = updatedBy;
+        UpdatedBy = updatedByResult.Value;
 
         return this;
     }
@@ -70,12 +88,18 @@ public sealed class Tenant : IAuditable
     {
         if (IsDeleted)
             return Error.Conflict("Tenant.Deleted", "Tenant is already deleted");
-        if (string.IsNullOrWhiteSpace(deletedBy))
-            return Error.Validation("Tenant.DeletedBy", "DeletedBy is required");
+
+        var deletedByResult = Guard.NotNullOrWhiteSpace(
+            deletedBy,
+            "Tenant.DeletedBy",
+            "DeletedBy is required"
+        );
+        if (deletedByResult.IsError)
+            return deletedByResult.Errors;
 
         IsActive = false;
         DeletedAt = DateTime.UtcNow;
-        DeletedBy = deletedBy;
+        DeletedBy = deletedByResult.Value;
 
         return this;
     }

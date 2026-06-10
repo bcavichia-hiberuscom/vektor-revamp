@@ -1,4 +1,5 @@
 using ErrorOr;
+using Hiberus.Industria.Vektor.Domain.Common;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.ActiveVehicleRoute;
@@ -30,25 +31,48 @@ public sealed class ActiveVehicleRoute : IAuditable
         string createdBy
     )
     {
-        if (tenantId == Guid.Empty)
-            return Error.Validation("ActiveVehicleRoute.TenantId", "TenantId cannot be empty");
-        if (vehicleId == Guid.Empty)
-            return Error.Validation("ActiveVehicleRoute.VehicleId", "VehicleId cannot be empty");
-        if (string.IsNullOrWhiteSpace(routePayload))
-            return Error.Validation("ActiveVehicleRoute.RoutePayload", "RoutePayload is required");
-        if (string.IsNullOrWhiteSpace(createdBy))
-            return Error.Validation("ActiveVehicleRoute.CreatedBy", "CreatedBy is required");
+        var tenantIdResult = Guard.NotEmpty(
+            tenantId,
+            "ActiveVehicleRoute.TenantId",
+            "TenantId cannot be empty"
+        );
+        if (tenantIdResult.IsError)
+            return tenantIdResult.Errors;
+
+        var vehicleIdResult = Guard.NotEmpty(
+            vehicleId,
+            "ActiveVehicleRoute.VehicleId",
+            "VehicleId cannot be empty"
+        );
+        if (vehicleIdResult.IsError)
+            return vehicleIdResult.Errors;
+
+        var routePayloadResult = Guard.NotNullOrWhiteSpace(
+            routePayload,
+            "ActiveVehicleRoute.RoutePayload",
+            "RoutePayload is required"
+        );
+        if (routePayloadResult.IsError)
+            return routePayloadResult.Errors;
+
+        var createdByResult = Guard.NotNullOrWhiteSpace(
+            createdBy,
+            "ActiveVehicleRoute.CreatedBy",
+            "CreatedBy is required"
+        );
+        if (createdByResult.IsError)
+            return createdByResult.Errors;
 
         return new ActiveVehicleRoute
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            VehicleId = vehicleId,
-            RoutePayload = routePayload,
+            TenantId = tenantIdResult.Value,
+            VehicleId = vehicleIdResult.Value,
+            RoutePayload = routePayloadResult.Value,
             AssociatedOrderIds = associatedOrderIds,
             StartedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
-            CreatedBy = createdBy,
+            CreatedBy = createdByResult.Value,
         };
     }
 
@@ -58,15 +82,26 @@ public sealed class ActiveVehicleRoute : IAuditable
         string updatedBy
     )
     {
-        if (string.IsNullOrWhiteSpace(routePayload))
-            return Error.Validation("ActiveVehicleRoute.RoutePayload", "RoutePayload is required");
-        if (string.IsNullOrWhiteSpace(updatedBy))
-            return Error.Validation("ActiveVehicleRoute.UpdatedBy", "UpdatedBy is required");
+        var routePayloadResult = Guard.NotNullOrWhiteSpace(
+            routePayload,
+            "ActiveVehicleRoute.RoutePayload",
+            "RoutePayload is required"
+        );
+        if (routePayloadResult.IsError)
+            return routePayloadResult.Errors;
 
-        RoutePayload = routePayload;
+        var updatedByResult = Guard.NotNullOrWhiteSpace(
+            updatedBy,
+            "ActiveVehicleRoute.UpdatedBy",
+            "UpdatedBy is required"
+        );
+        if (updatedByResult.IsError)
+            return updatedByResult.Errors;
+
+        RoutePayload = routePayloadResult.Value;
         AssociatedOrderIds = associatedOrderIds;
         UpdatedAt = DateTime.UtcNow;
-        UpdatedBy = updatedBy;
+        UpdatedBy = updatedByResult.Value;
 
         return this;
     }
@@ -74,8 +109,13 @@ public sealed class ActiveVehicleRoute : IAuditable
     // Devuelve los datos necesarios para construir el RouteHistory en el service
     public ErrorOr<RouteHistory.RouteHistory> Complete(string completedBy)
     {
-        if (string.IsNullOrWhiteSpace(completedBy))
-            return Error.Validation("ActiveVehicleRoute.CompletedBy", "CompletedBy is required");
+        var completedByResult = Guard.NotNullOrWhiteSpace(
+            completedBy,
+            "ActiveVehicleRoute.CompletedBy",
+            "CompletedBy is required"
+        );
+        if (completedByResult.IsError)
+            return completedByResult.Errors;
 
         return RouteHistory.RouteHistory.Create(
             tenantId: TenantId,
@@ -83,7 +123,7 @@ public sealed class ActiveVehicleRoute : IAuditable
             routePayload: RoutePayload,
             associatedOrderIds: AssociatedOrderIds,
             startedAt: StartedAt,
-            createdBy: completedBy
+            createdBy: completedByResult.Value
         );
     }
 }

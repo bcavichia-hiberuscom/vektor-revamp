@@ -1,4 +1,5 @@
 using ErrorOr;
+using Hiberus.Industria.Vektor.Domain.Common;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.Vehicle;
@@ -56,18 +57,25 @@ public sealed class Vehicle : IAuditable
         int? year = null
     )
     {
-        if (tenantId == Guid.Empty)
-            return Error.Validation("Vehicle.TenantId", "TenantId cannot be empty");
-        if (string.IsNullOrWhiteSpace(label))
-            return Error.Validation("Vehicle.Label", "Label is required");
+        var tenantIdResult = Guard.NotEmpty(
+            tenantId,
+            "Vehicle.TenantId",
+            "TenantId cannot be empty"
+        );
+        if (tenantIdResult.IsError)
+            return tenantIdResult.Errors;
+
+        var labelResult = Guard.NotNullOrWhiteSpace(label, "Vehicle.Label", "Label is required");
+        if (labelResult.IsError)
+            return labelResult.Errors;
         if (year is < 1900 or > 2100)
             return Error.Validation("Vehicle.Year", "Year is not valid");
 
         return new Vehicle
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            Label = label.Trim(),
+            TenantId = tenantIdResult.Value,
+            Label = labelResult.Value,
             LicensePlate = licensePlate?.Trim(),
             Brand = brand?.Trim(),
             Model = model?.Trim(),
@@ -88,12 +96,13 @@ public sealed class Vehicle : IAuditable
         string updatedBy
     )
     {
-        if (string.IsNullOrWhiteSpace(label))
-            return Error.Validation("Vehicle.Label", "Label is required");
+        var labelResult = Guard.NotNullOrWhiteSpace(label, "Vehicle.Label", "Label is required");
+        if (labelResult.IsError)
+            return labelResult.Errors;
         if (year is < 1900 or > 2100)
             return Error.Validation("Vehicle.Year", "Year is not valid");
 
-        Label = label.Trim();
+        Label = labelResult.Value;
         LicensePlate = licensePlate?.Trim();
         Brand = brand?.Trim();
         Model = model?.Trim();

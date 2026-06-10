@@ -1,4 +1,5 @@
 using ErrorOr;
+using Hiberus.Industria.Vektor.Domain.Common;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.Order;
@@ -39,16 +40,19 @@ public sealed class Order : IAuditable
         string? customerPhone = null
     )
     {
-        if (tenantId == Guid.Empty)
-            return Error.Validation("Order.TenantId", "TenantId cannot be empty");
-        if (string.IsNullOrWhiteSpace(label))
-            return Error.Validation("Order.Label", "Label is required");
+        var tenantIdResult = Guard.NotEmpty(tenantId, "Order.TenantId", "TenantId cannot be empty");
+        if (tenantIdResult.IsError)
+            return tenantIdResult.Errors;
+
+        var labelResult = Guard.NotNullOrWhiteSpace(label, "Order.Label", "Label is required");
+        if (labelResult.IsError)
+            return labelResult.Errors;
 
         return new Order
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            Label = label.Trim(),
+            TenantId = tenantIdResult.Value,
+            Label = labelResult.Value,
             Latitude = latitude,
             Longitude = longitude,
             ExternalOrderId = externalOrderId,
@@ -72,10 +76,11 @@ public sealed class Order : IAuditable
         string? customerPhone = null
     )
     {
-        if (string.IsNullOrWhiteSpace(label))
-            return Error.Validation("Order.Label", "Label is required");
+        var labelResult = Guard.NotNullOrWhiteSpace(label, "Order.Label", "Label is required");
+        if (labelResult.IsError)
+            return labelResult.Errors;
 
-        Label = label.Trim();
+        Label = labelResult.Value;
         Latitude = latitude;
         Longitude = longitude;
         ExternalOrderId = externalOrderId;

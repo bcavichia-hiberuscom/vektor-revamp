@@ -1,4 +1,5 @@
 using ErrorOr;
+using Hiberus.Industria.Vektor.Domain.Common;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.User;
@@ -36,23 +37,32 @@ public sealed class User : IAuditable
         string createdBy
     )
     {
-        if (tenantId == Guid.Empty)
-            return Error.Validation("User.TenantId", "TenantId cannot be empty");
-        if (string.IsNullOrWhiteSpace(email))
-            return Error.Validation("User.Email", "Email is required");
-        if (string.IsNullOrWhiteSpace(createdBy))
-            return Error.Validation("User.CreatedBy", "CreatedBy is required");
+        var tenantIdResult = Guard.NotEmpty(tenantId, "User.TenantId", "TenantId cannot be empty");
+        if (tenantIdResult.IsError)
+            return tenantIdResult.Errors;
+
+        var emailResult = Guard.NotNullOrWhiteSpace(email, "User.Email", "Email is required");
+        if (emailResult.IsError)
+            return emailResult.Errors;
+
+        var createdByResult = Guard.NotNullOrWhiteSpace(
+            createdBy,
+            "User.CreatedBy",
+            "CreatedBy is required"
+        );
+        if (createdByResult.IsError)
+            return createdByResult.Errors;
 
         return new User
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            Email = email.Trim().ToLowerInvariant(),
+            TenantId = tenantIdResult.Value,
+            Email = emailResult.Value.ToLowerInvariant(),
             Name = name?.Trim(),
             Role = role,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            CreatedBy = createdBy,
+            CreatedBy = createdByResult.Value,
         };
     }
 
@@ -60,14 +70,20 @@ public sealed class User : IAuditable
     {
         if (IsDeleted)
             return Error.Conflict("User.Deleted", "Cannot update a deleted user");
-        if (string.IsNullOrWhiteSpace(updatedBy))
-            return Error.Validation("User.UpdatedBy", "UpdatedBy is required");
+
+        var updatedByResult = Guard.NotNullOrWhiteSpace(
+            updatedBy,
+            "User.UpdatedBy",
+            "UpdatedBy is required"
+        );
+        if (updatedByResult.IsError)
+            return updatedByResult.Errors;
 
         Name = name?.Trim();
         Role = role;
         IsActive = isActive;
         UpdatedAt = DateTime.UtcNow;
-        UpdatedBy = updatedBy;
+        UpdatedBy = updatedByResult.Value;
 
         return this;
     }
@@ -76,12 +92,18 @@ public sealed class User : IAuditable
     {
         if (IsDeleted)
             return Error.Conflict("User.Deleted", "User is already deleted");
-        if (string.IsNullOrWhiteSpace(deletedBy))
-            return Error.Validation("User.DeletedBy", "DeletedBy is required");
+
+        var deletedByResult = Guard.NotNullOrWhiteSpace(
+            deletedBy,
+            "User.DeletedBy",
+            "DeletedBy is required"
+        );
+        if (deletedByResult.IsError)
+            return deletedByResult.Errors;
 
         IsActive = false;
         DeletedAt = DateTime.UtcNow;
-        DeletedBy = deletedBy;
+        DeletedBy = deletedByResult.Value;
 
         return this;
     }

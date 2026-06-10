@@ -1,4 +1,5 @@
 using ErrorOr;
+using Hiberus.Industria.Vektor.Domain.Common;
 using Hiberus.Industria.Vektor.Domain.Common.Interfaces;
 
 namespace Hiberus.Industria.Vektor.Domain.OrderAssignment;
@@ -34,19 +35,36 @@ public sealed class OrderAssignment : IAuditable
         string createdBy
     )
     {
-        if (tenantId == Guid.Empty)
-            return Error.Validation("OrderAssignment.TenantId", "TenantId cannot be empty");
-        if (orderId == Guid.Empty)
-            return Error.Validation("OrderAssignment.OrderId", "OrderId cannot be empty");
-        if (vehicleId == Guid.Empty)
-            return Error.Validation("OrderAssignment.VehicleId", "VehicleId cannot be empty");
+        var tenantIdResult = Guard.NotEmpty(
+            tenantId,
+            "OrderAssignment.TenantId",
+            "TenantId cannot be empty"
+        );
+        if (tenantIdResult.IsError)
+            return tenantIdResult.Errors;
+
+        var orderIdResult = Guard.NotEmpty(
+            orderId,
+            "OrderAssignment.OrderId",
+            "OrderId cannot be empty"
+        );
+        if (orderIdResult.IsError)
+            return orderIdResult.Errors;
+
+        var vehicleIdResult = Guard.NotEmpty(
+            vehicleId,
+            "OrderAssignment.VehicleId",
+            "VehicleId cannot be empty"
+        );
+        if (vehicleIdResult.IsError)
+            return vehicleIdResult.Errors;
 
         return new OrderAssignment
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            OrderId = orderId,
-            VehicleId = vehicleId,
+            TenantId = tenantIdResult.Value,
+            OrderId = orderIdResult.Value,
+            VehicleId = vehicleIdResult.Value,
             Status = OrderAssignmentStatus.Pending,
             AssignedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
@@ -83,11 +101,16 @@ public sealed class OrderAssignment : IAuditable
 
     public ErrorOr<OrderAssignment> Fail(string reason, string updatedBy)
     {
-        if (string.IsNullOrWhiteSpace(reason))
-            return Error.Validation("OrderAssignment.FailureReason", "Failure reason is required");
+        var reasonResult = Guard.NotNullOrWhiteSpace(
+            reason,
+            "OrderAssignment.FailureReason",
+            "Failure reason is required"
+        );
+        if (reasonResult.IsError)
+            return reasonResult.Errors;
 
         Status = OrderAssignmentStatus.Failed;
-        FailureReason = reason;
+        FailureReason = reasonResult.Value;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
 
