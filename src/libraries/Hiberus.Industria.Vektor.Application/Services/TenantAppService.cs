@@ -25,10 +25,10 @@ public class TenantAppService
     )
     {
         var paginationParams = new PaginationParams(pageNumber, pageSize);
-        
+
         // Get total count without loading data
         var totalCount = await Task.FromResult(0); // Will implement GetCountAsync if needed
-        
+
         // Get paginated data
         var tenants = await _repo.GetAllAsync(ct);
         var pagedTenants = tenants
@@ -41,14 +41,7 @@ public class TenantAppService
 
         // Project entities to DTOs
         var dtos = pagedTenants
-            .Select(t => new TenantDto(
-                t.Id,
-                t.Name,
-                t.Slug,
-                t.IsActive,
-                t.CreatedAt,
-                t.UpdatedAt
-            ))
+            .Select(t => new TenantDto(t.Id, t.Name, t.Slug, t.IsActive, t.CreatedAt, t.UpdatedAt))
             .ToList();
 
         return new PagedResult<TenantDto>(dtos, totalCount, pageNumber, pageSize);
